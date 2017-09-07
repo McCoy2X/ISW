@@ -35,19 +35,19 @@ test02RemovingCustomerShouldNotTakeMoreThan100Milliseconds
 	
 	self assert: [ customerBook removeCustomerNamed: paulMcCartney. ] completesUnder: 100 * millisecond.! !
 
-!IdiomTest methodsFor: 'testing' stamp: 'ISW 9/6/2017 22:55:51'!
+!IdiomTest methodsFor: 'testing' stamp: 'ISW 9/7/2017 16:24:05'!
 test03CanNotAddACustomerWithEmptyName 
 
 	| customerBook |
 			
 	customerBook := CustomerBook new.
 
-	self should: [ customerBook addCustomerNamed: ''.] raise: Error
+	self assert: [ customerBook addCustomerNamed: ''.] throwsException: Error
 		withExceptionDo: [ :anError | 
 			self assert: anError messageText = CustomerBook customerCanNotBeEmptyErrorMessage.
 			self assert: customerBook isEmpty ]! !
 
-!IdiomTest methodsFor: 'testing' stamp: 'ISW 9/6/2017 22:56:06'!
+!IdiomTest methodsFor: 'testing' stamp: 'ISW 9/7/2017 16:24:56'!
 test04CanNotRemoveAnInvalidCustomer
 	
 	| customerBook johnLennon |
@@ -56,7 +56,7 @@ test04CanNotRemoveAnInvalidCustomer
 	johnLennon := 'John Lennon'.
 	customerBook addCustomerNamed: johnLennon.
 	
-	self should: [ customerBook removeCustomerNamed: 'Paul McCartney'. ] raise: NotFound
+	self assert: [ customerBook removeCustomerNamed: 'Paul McCartney'. ] throwsException: NotFound
 		withExceptionDo: [ :anError | 
 			self assert: customerBook numberOfCustomers = 1.
 			self assert: (customerBook includesCustomerNamed: johnLennon) ].
