@@ -139,43 +139,43 @@ test10CanNotTopWhenThereAreNoObjectsInTheStack
 
 !classDefinition: #OOStack category: #'Stack-Exercise'!
 Object subclass: #OOStack
-	instanceVariableNames: 'contents'
+	instanceVariableNames: 'topOfTheStack'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:18:26'!
+!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:52:44'!
 isEmpty
-	^contents size = 1.	! !
+	^self size = 0.	! !
 
-!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:18:36'!
+!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:59:03'!
 size
-	^contents size - 1.! !
+	^topOfTheStack count.! !
 
-!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:21:32'!
+!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:59:24'!
 top
 	| raiseEmptyError |
 	raiseEmptyError := [self error: self class stackEmptyErrorDescription].
-	^contents first elementWhenNotPresent: raiseEmptyError.! !
+	^topOfTheStack elementWhenNotPresent: raiseEmptyError.! !
 
 
-!OOStack methodsFor: 'adding' stamp: 'NH 9/15/2017 16:22:50'!
+!OOStack methodsFor: 'adding' stamp: 'NH 9/15/2017 16:57:39'!
 push: anObject
-	contents addFirst: (StackElement with: anObject). ! !
+	| newTop |
+	newTop := (StackElement with: anObject above: topOfTheStack ). 
+	topOfTheStack := newTop.! !
 
 
-!OOStack methodsFor: 'initialization' stamp: 'NH 9/15/2017 16:18:12'!
+!OOStack methodsFor: 'initialization' stamp: 'NH 9/15/2017 17:32:04'!
 initialize
-	contents := OrderedCollection new.
-	contents addFirst: EmptyStackElement new.
-	^self.! !
+	topOfTheStack _ StackBottom new.! !
 
 
-!OOStack methodsFor: 'removing' stamp: 'NH 9/14/2017 17:51:42'!
+!OOStack methodsFor: 'removing' stamp: 'NH 9/15/2017 17:30:06'!
 pop
 	| top |
 	top := self top.
-	contents removeFirst.
+	topOfTheStack := topOfTheStack nextNode.
 	^top.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
@@ -191,22 +191,63 @@ stackEmptyErrorDescription
 
 
 
-!classDefinition: #StackElement category: #'Stack-Exercise'!
-Object subclass: #StackElement
-	instanceVariableNames: 'content'
+!classDefinition: #StackNode category: #'Stack-Exercise'!
+Object subclass: #StackNode
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!StackElement methodsFor: 'initialization' stamp: 'NH 9/15/2017 15:53:50'!
-initializeWith: anObject
-	content := anObject .
-	! !
+!StackNode methodsFor: 'accessing' stamp: 'NH 9/15/2017 17:12:56'!
+count
+	^self subclassResponsibility.! !
 
-
-!StackElement methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:16:27'!
+!StackNode methodsFor: 'accessing' stamp: 'NH 9/15/2017 17:05:57'!
 elementWhenNotPresent: blockWhenEmpty
-	^content! !
+	^self subclassResponsibility.! !
+
+
+!classDefinition: #StackBottom category: #'Stack-Exercise'!
+StackNode subclass: #StackBottom
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Stack-Exercise'!
+
+!StackBottom methodsFor: 'accessing' stamp: 'NH 9/15/2017 17:13:32'!
+count
+	^0.! !
+
+!StackBottom methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:17:13'!
+elementWhenNotPresent: blockWhenEmpty
+	^blockWhenEmpty value.! !
+
+
+!classDefinition: #StackElement category: #'Stack-Exercise'!
+StackNode subclass: #StackElement
+	instanceVariableNames: 'content next'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Stack-Exercise'!
+
+!StackElement methodsFor: 'initialization' stamp: 'NH 9/15/2017 17:22:51'!
+initializeWith: anObject above: aStackNode 
+	content  := anObject.
+	next := aStackNode.
+	^self.! !
+
+
+!StackElement methodsFor: 'accessing' stamp: 'NH 9/15/2017 17:30:36'!
+count
+	^ 1 + next count.! !
+
+!StackElement methodsFor: 'accessing' stamp: 'NH 9/15/2017 17:05:10'!
+elementWhenNotPresent: blockWhenEmpty
+	^content.! !
+
+!StackElement methodsFor: 'accessing' stamp: 'NH 9/15/2017 17:29:17'!
+nextNode
+	^next! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -214,18 +255,6 @@ elementWhenNotPresent: blockWhenEmpty
 StackElement class
 	instanceVariableNames: ''!
 
-!StackElement class methodsFor: 'as yet unclassified' stamp: 'NH 9/15/2017 15:54:54'!
-with: anObject
-	^self basicNew initializeWith: anObject.! !
-
-
-!classDefinition: #EmptyStackElement category: #'Stack-Exercise'!
-StackElement subclass: #EmptyStackElement
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Stack-Exercise'!
-
-!EmptyStackElement methodsFor: 'as yet unclassified' stamp: 'NH 9/15/2017 16:17:13'!
-elementWhenNotPresent: blockWhenEmpty
-	^blockWhenEmpty value.! !
+!StackElement class methodsFor: 'instance creation' stamp: 'NH 9/15/2017 17:20:39'!
+with: anObject above: anStackNode
+	^self basicNew initializeWith: anObject above: anStackNode.! !
