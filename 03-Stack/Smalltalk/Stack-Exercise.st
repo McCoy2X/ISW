@@ -144,28 +144,30 @@ Object subclass: #OOStack
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!OOStack methodsFor: 'accessing' stamp: 'NH 9/14/2017 17:26:55'!
+!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:18:26'!
 isEmpty
-	^contents size = 0.	! !
+	^contents size = 1.	! !
 
-!OOStack methodsFor: 'accessing' stamp: 'NH 9/14/2017 17:45:08'!
+!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:18:36'!
 size
-	^contents size.! !
+	^contents size - 1.! !
 
-!OOStack methodsFor: 'accessing' stamp: 'NH 9/14/2017 17:51:15'!
+!OOStack methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:21:32'!
 top
-	^[contents first.] on: Error do: [self error: self class stackEmptyErrorDescription].
-	! !
+	| raiseEmptyError |
+	raiseEmptyError := [self error: self class stackEmptyErrorDescription].
+	^contents first elementWhenNotPresent: raiseEmptyError.! !
 
 
-!OOStack methodsFor: 'adding' stamp: 'NH 9/14/2017 17:31:17'!
+!OOStack methodsFor: 'adding' stamp: 'NH 9/15/2017 16:22:50'!
 push: anObject
-	contents addFirst: anObject. ! !
+	contents addFirst: (StackElement with: anObject). ! !
 
 
-!OOStack methodsFor: 'initialization' stamp: 'NH 9/14/2017 17:21:20'!
+!OOStack methodsFor: 'initialization' stamp: 'NH 9/15/2017 16:18:12'!
 initialize
 	contents := OrderedCollection new.
+	contents addFirst: EmptyStackElement new.
 	^self.! !
 
 
@@ -187,3 +189,43 @@ stackEmptyErrorDescription
 	
 	^ 'Stack is empty'! !
 
+
+
+!classDefinition: #StackElement category: #'Stack-Exercise'!
+Object subclass: #StackElement
+	instanceVariableNames: 'content'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Stack-Exercise'!
+
+!StackElement methodsFor: 'initialization' stamp: 'NH 9/15/2017 15:53:50'!
+initializeWith: anObject
+	content := anObject .
+	! !
+
+
+!StackElement methodsFor: 'accessing' stamp: 'NH 9/15/2017 16:16:27'!
+elementWhenNotPresent: blockWhenEmpty
+	^content! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'StackElement class' category: #'Stack-Exercise'!
+StackElement class
+	instanceVariableNames: ''!
+
+!StackElement class methodsFor: 'as yet unclassified' stamp: 'NH 9/15/2017 15:54:54'!
+with: anObject
+	^self basicNew initializeWith: anObject.! !
+
+
+!classDefinition: #EmptyStackElement category: #'Stack-Exercise'!
+StackElement subclass: #EmptyStackElement
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Stack-Exercise'!
+
+!EmptyStackElement methodsFor: 'as yet unclassified' stamp: 'NH 9/15/2017 16:17:13'!
+elementWhenNotPresent: blockWhenEmpty
+	^blockWhenEmpty value.! !
