@@ -414,12 +414,11 @@ balance
 	^ accounts inject: 0 into: [ :balanceSoFar :anAccount | balanceSoFar + anAccount balance ]! !
 
 
-!Portfolio methodsFor: 'testing' stamp: 'ISW 9/24/2017 13:25:33'!
+!Portfolio methodsFor: 'testing' stamp: 'NH 9/24/2017 16:28:00'!
 manages: anAccount
 
-	^ (self = anAccount ) ifTrue: [ true ] ifFalse: [
-		(accounts select: [ :aPortfolioAccount | aPortfolioAccount manages: anAccount ]) isEmpty not.
-	]! !
+	^ (self = anAccount )  or: (accounts select: [ :aPortfolioAccount | aPortfolioAccount manages: anAccount ]) isEmpty not.
+! !
 
 !Portfolio methodsFor: 'testing' stamp: 'ISW 9/24/2017 13:19:19'!
 registers: aTtransaction
@@ -436,42 +435,33 @@ transactions
 	accounts do: [ :anAccount | transactions addAll: anAccount transactions ].
 	^ transactions ! !
 
-!Portfolio methodsFor: 'transactions' stamp: 'ISW 9/24/2017 13:43:50'!
+!Portfolio methodsFor: 'transactions' stamp: 'NH 9/24/2017 17:38:45'!
 transactionsOf: anAccount 
 
-	^ (accounts select: [ :aPortfolioAccount | aPortfolioAccount manages: anAccount ]) isEmpty ifTrue: [
-		self error: self class accountNotManagedMessageDescription 
-	] ifFalse: [
-		anAccount transactions
-	]! !
+	| managerAccounts |
+	managerAccounts := (accounts select: [ :aPortfolioAccount | aPortfolioAccount manages: anAccount ]).
+	managerAccounts collect: [ :element | ^anAccount transactions].
+	self error: self class accountNotManagedMessageDescription.! !
 
 
-!Portfolio methodsFor: 'initialization' stamp: 'ISW 9/24/2017 13:55:37'!
+!Portfolio methodsFor: 'initialization' stamp: 'NH 9/24/2017 17:22:52'!
+addAccount: anAccount
+	(self manages: anAccount)
+		ifTrue: [ self error: self class accountAlreadyManagedErrorMessage ]
+		ifFalse: [ accounts add: anAccount ].! !
+
+!Portfolio methodsFor: 'initialization' stamp: 'NH 9/24/2017 17:24:31'!
 with: anAccount and: anotherAccount
 
 	accounts := OrderedCollection new.
-	accounts add: anAccount.
-	(self manages: anotherAccount) ifTrue: [
-		self error: self class accountAlreadyManagedErrorMessage
-	] ifFalse: [
-		accounts add: anotherAccount
-	].! !
+	self addAccount: anAccount.
+	self addAccount: anotherAccount.! !
 
-!Portfolio methodsFor: 'initialization' stamp: 'ISW 9/24/2017 14:00:24'!
+!Portfolio methodsFor: 'initialization' stamp: 'NH 9/24/2017 17:22:52'!
 withAll: anAccountCollection
-
-	accounts := OrderedCollection new.
-	accounts add: (anAccountCollection first).
-	
-	anAccountCollection removeFirst.
-	
+	accounts _ OrderedCollection new.
 	anAccountCollection do: [ :anAccount |
-		(self manages: anAccount) ifTrue: [
-			self error: self class accountAlreadyManagedErrorMessage
-		] ifFalse: [
-			accounts add: anAccount
-		]
-	]! !
+		self addAccount: anAccount ].! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
