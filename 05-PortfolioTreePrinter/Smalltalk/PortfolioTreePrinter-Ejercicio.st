@@ -465,10 +465,10 @@ accountSummaryLinesOf: aReceptiveAccount
 	adapter := SummarizingAccountAdapter for: aReceptiveAccount.
 	^adapter summarize.! !
 
-!PortfolioTest methodsFor: 'test support' stamp: 'HernanWilkinson 9/6/2016 19:43'!
-accountTransferNetOf: aReceptiveAccount 
-	
-	self shouldBeImplemented ! !
+!PortfolioTest methodsFor: 'test support' stamp: 'NH 9/26/2017 17:46:22'!
+accountTransferNetOf: aSummarizingAccount 
+
+	^aSummarizingAccount transactions inject: 0 into: [:transferNet :aTransaction | aTransaction updateTransferNet: transferNet ] .! !
 
 !PortfolioTest methodsFor: 'test support' stamp: 'HernanWilkinson 9/6/2016 19:43'!
 investmentEarningsOf: aReceptiveAccount 
@@ -561,6 +561,11 @@ value
 
 	^ value! !
 
+
+!Deposit methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:39:23'!
+updateTransferNet: aSmallInteger 
+	^0! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'Deposit class' category: #'PortfolioTreePrinter-Ejercicio'!
@@ -599,6 +604,10 @@ initializefor: aTransfer on: anAccount
 updateBalance: balance
 	^ balance + myTransfer value.! !
 
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:41:42'!
+updateTransferNet: aTransferNet
+	^ aTransferNet + myTransfer value.! !
+
 !TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:30:08'!
 value
 	^ myTransfer value.! !
@@ -636,6 +645,10 @@ initializefor: aTransfer on: anAccount
 !TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:42:00'!
 updateBalance: balance
 	^ balance - myTransfer value.! !
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:40:58'!
+updateTransferNet: aTransferNet 
+	^ aTransferNet - myTransfer value.! !
 
 !TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:30:24'!
 value
@@ -680,6 +693,11 @@ updateBalance: balance
 value
 
 	^ value ! !
+
+
+!Withdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:39:56'!
+updateTransferNet: aSmallInteger 
+	^0.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
