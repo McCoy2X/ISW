@@ -540,7 +540,7 @@ initializeFor: aValue
 	value := aValue ! !
 
 
-!Deposit methodsFor: 'value' stamp: 'NH 9/25/2017 21:05:58'!
+!Deposit methodsFor: 'value' stamp: 'NH 9/25/2017 22:02:06'!
 updateBalance: balance
 	^ balance + self value.! !
 
@@ -571,6 +571,60 @@ register: aValue on: account
 	^ withdraw! !
 
 
+!classDefinition: #TransferDeposit category: #'PortfolioTreePrinter-Ejercicio'!
+AccountTransaction subclass: #TransferDeposit
+	instanceVariableNames: 'myTransfer ownerAccount'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'PortfolioTreePrinter-Ejercicio'!
+
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:58:31'!
+initializefor: aTransfer on: anAccount
+	myTransfer := aTransfer.
+	ownerAccount := anAccount.! !
+
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 22:01:23'!
+updateBalance: balance
+	^ balance + myTransfer value.! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'TransferDeposit class' category: #'PortfolioTreePrinter-Ejercicio'!
+TransferDeposit class
+	instanceVariableNames: ''!
+
+!TransferDeposit class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:57:23'!
+for: aTransfer on: anAccount
+	^ self new  initializefor: self on: anAccount.! !
+
+
+!classDefinition: #TransferWithdraw category: #'PortfolioTreePrinter-Ejercicio'!
+AccountTransaction subclass: #TransferWithdraw
+	instanceVariableNames: 'myTransfer ownerAccount'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'PortfolioTreePrinter-Ejercicio'!
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 22:00:04'!
+initializefor: aTransfer on: anAccount
+	myTransfer := aTransfer.
+	ownerAccount := anAccount.! !
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 22:01:51'!
+updateBalance: balance
+	^ balance + myTransfer value.! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'TransferWithdraw class' category: #'PortfolioTreePrinter-Ejercicio'!
+TransferWithdraw class
+	instanceVariableNames: ''!
+
+!TransferWithdraw class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:59:26'!
+for: aTransfer on: anAccount
+	^ self new  initializefor: self on: anAccount.! !
+
+
 !classDefinition: #Withdraw category: #'PortfolioTreePrinter-Ejercicio'!
 AccountTransaction subclass: #Withdraw
 	instanceVariableNames: 'value'
@@ -584,7 +638,7 @@ initializeFor: aValue
 	value := aValue ! !
 
 
-!Withdraw methodsFor: 'value' stamp: 'NH 9/25/2017 21:05:08'!
+!Withdraw methodsFor: 'value' stamp: 'NH 9/25/2017 22:02:24'!
 updateBalance: balance
 	^balance - self value.! !
 
@@ -784,11 +838,11 @@ initialize
 	transactions := OrderedCollection new.! !
 
 
-!ReceptiveAccount methodsFor: 'transactions' stamp: 'NH 9/25/2017 21:07:08'!
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'NH 9/25/2017 22:02:38'!
 balance
 
 	^ transactions inject: 0 into: [ :balance :transaction | 
-		transaction updateBalance: balance
+		transaction updateBalance: balance.
 		].
 	! !
 
@@ -825,8 +879,11 @@ Object subclass: #Transfer
 	poolDictionaries: ''
 	category: 'PortfolioTreePrinter-Ejercicio'!
 
-!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 20:31:12'!
+!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:52:20'!
 initializefor: anAmount from: anAccount to: aReceptorAccount.
+
+	TransferWithdraw for: self on: anAccount.
+	TransferDeposit for: self on: aReceptorAccount.
 
 	value := anAmount .
 	sourceAccount := anAccount .
@@ -837,9 +894,11 @@ initializefor: anAmount from: anAccount to: aReceptorAccount.
 originAccount
 	^sourceAccount.! !
 
-!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:10:36'!
-updateBalance: aSmallInteger 
-	self shouldBeImplemented.! !
+!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:19:39'!
+updateBalance: balance of: anAccount
+	^(self originAccount = anAccount) 
+		ifTrue: [balance  - self value]
+		ifFalse: [balance + self value].! !
 
 !Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 20:35:48'!
 value
@@ -851,11 +910,9 @@ value
 Transfer class
 	instanceVariableNames: ''!
 
-!Transfer class methodsFor: 'initialization' stamp: 'NH 9/25/2017 20:44:57'!
+!Transfer class methodsFor: 'initialization' stamp: 'NH 9/25/2017 21:52:00'!
 register: anAmount from:  anAccount to: aReceptorAccount 
 	| transfer |
 	
-	transfer := self new initializefor: anAmount from: anAmount to: aReceptorAccount.
-	anAccount register: transfer.
-	aReceptorAccount register: transfer.
+	transfer := self new initializefor: anAmount from: anAccount to: aReceptorAccount.
 	^transfer.! !
