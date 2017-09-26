@@ -458,10 +458,12 @@ test29ReversePortfolioTreePrinterPrintsTheCompositeStartingFromTheLeaves
 	! !
 
 
-!PortfolioTest methodsFor: 'test support' stamp: 'HernanWilkinson 9/6/2016 19:43'!
+!PortfolioTest methodsFor: 'test support' stamp: 'NH 9/26/2017 15:15:29'!
 accountSummaryLinesOf: aReceptiveAccount 
 	
-	self shouldBeImplemented ! !
+	 | adapter |
+	adapter := SummarizingAccountAdapter for: aReceptiveAccount.
+	^adapter summarize.! !
 
 !PortfolioTest methodsFor: 'test support' stamp: 'HernanWilkinson 9/6/2016 19:43'!
 accountTransferNetOf: aReceptiveAccount 
@@ -487,6 +489,16 @@ portofolioTreeOf: aPortfolio namingAccountWith: aDictionary
 reversePortofolioTreeOf: aPortfolio namingAccountWith: aDictionary 
 	
 	self shouldBeImplemented ! !
+
+!PortfolioTest methodsFor: 'test support' stamp: 'NH 9/26/2017 14:44:37'!
+summarize: aTransaction 
+	| line translations |
+	line := ''.
+	line 
+		append: (translations at: aTransaction class);
+		append: ' por ';
+		append: aTransaction value asString. 
+! !
 
 
 !classDefinition: #AccountTransaction category: #'PortfolioTreePrinter-Ejercicio'!
@@ -587,11 +599,19 @@ initializefor: aTransfer on: anAccount
 updateBalance: balance
 	^ balance + myTransfer value.! !
 
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:30:08'!
+value
+	^ myTransfer value.! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'TransferDeposit class' category: #'PortfolioTreePrinter-Ejercicio'!
 TransferDeposit class
 	instanceVariableNames: ''!
+
+!TransferDeposit class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:57:23'!
+for: aTransfer on: anAccount
+	^ self new  initializefor: self on: anAccount.! !
 
 !TransferDeposit class methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:57:30'!
 register: aTransfer on: anAccount
@@ -617,11 +637,19 @@ initializefor: aTransfer on: anAccount
 updateBalance: balance
 	^ balance - myTransfer value.! !
 
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:30:24'!
+value
+	^ myTransfer value.! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'TransferWithdraw class' category: #'PortfolioTreePrinter-Ejercicio'!
 TransferWithdraw class
 	instanceVariableNames: ''!
+
+!TransferWithdraw class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:59:26'!
+for: aTransfer on: anAccount
+	^ self new  initializefor: self on: anAccount.! !
 
 !TransferWithdraw class methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:56:58'!
 register: aTransfer on: anAccount
@@ -876,6 +904,49 @@ registers: aTtransaction
 
 	^ transactions includes: aTtransaction 
 ! !
+
+
+!classDefinition: #SummarizingAccountAdapter category: #'PortfolioTreePrinter-Ejercicio'!
+Object subclass: #SummarizingAccountAdapter
+	instanceVariableNames: 'translations account'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'PortfolioTreePrinter-Ejercicio'!
+
+!SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:51:06'!
+initializeWith: aReceptiveAccount 
+	translations := Dictionary new.
+	translations 
+		at: Withdraw put: 'Extraccion por ';
+		at: Deposit put: 'Deposito por ';
+		at: TransferWithdraw put: 'Transferencia por -';
+		at: TransferDeposit put: 'Transferencia por '.
+	account := aReceptiveAccount.! !
+
+!SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:25:30'!
+summarize
+	
+	| transactionList lines |
+	transactionList := account transactions.
+	lines := transactionList collect: [ :aTransaction | self summarize: aTransaction ].
+	^lines! !
+
+!SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:51:19'!
+summarize: aTransaction
+
+	| line |
+	line := (translations at: aTransaction class), aTransaction value asString. 
+	^line.! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'SummarizingAccountAdapter class' category: #'PortfolioTreePrinter-Ejercicio'!
+SummarizingAccountAdapter class
+	instanceVariableNames: ''!
+
+!SummarizingAccountAdapter class methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:20:20'!
+for: aReceptiveAccount 
+	^ self new initializeWith: aReceptiveAccount.! !
 
 
 !classDefinition: #Transfer category: #'PortfolioTreePrinter-Ejercicio'!
