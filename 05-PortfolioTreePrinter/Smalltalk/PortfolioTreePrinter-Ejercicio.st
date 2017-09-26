@@ -593,9 +593,12 @@ updateBalance: balance
 TransferDeposit class
 	instanceVariableNames: ''!
 
-!TransferDeposit class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:57:23'!
-for: aTransfer on: anAccount
-	^ self new  initializefor: self on: anAccount.! !
+!TransferDeposit class methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:57:30'!
+register: aTransfer on: anAccount
+	| deposit |
+	deposit _ self new initializefor: aTransfer on: anAccount.
+	anAccount register: deposit.
+	^ deposit.! !
 
 
 !classDefinition: #TransferWithdraw category: #'PortfolioTreePrinter-Ejercicio'!
@@ -610,9 +613,9 @@ initializefor: aTransfer on: anAccount
 	myTransfer := aTransfer.
 	ownerAccount := anAccount.! !
 
-!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 22:01:51'!
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:42:00'!
 updateBalance: balance
-	^ balance + myTransfer value.! !
+	^ balance - myTransfer value.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -620,9 +623,12 @@ updateBalance: balance
 TransferWithdraw class
 	instanceVariableNames: ''!
 
-!TransferWithdraw class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:59:26'!
-for: aTransfer on: anAccount
-	^ self new  initializefor: self on: anAccount.! !
+!TransferWithdraw class methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:56:58'!
+register: aTransfer on: anAccount
+	| withdraw |
+	withdraw := self new initializefor: aTransfer on: anAccount.
+	anAccount register: withdraw.
+	^withdraw.! !
 
 
 !classDefinition: #Withdraw category: #'PortfolioTreePrinter-Ejercicio'!
@@ -879,16 +885,14 @@ Object subclass: #Transfer
 	poolDictionaries: ''
 	category: 'PortfolioTreePrinter-Ejercicio'!
 
-!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:52:20'!
+!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:52:15'!
 initializefor: anAmount from: anAccount to: aReceptorAccount.
-
-	TransferWithdraw for: self on: anAccount.
-	TransferDeposit for: self on: aReceptorAccount.
-
 	value := anAmount .
 	sourceAccount := anAccount .
 	targetAccount := aReceptorAccount .
-	! !
+	TransferWithdraw register: self on: anAccount.
+	TransferDeposit register: self on: aReceptorAccount.
+! !
 
 !Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 20:35:32'!
 originAccount
