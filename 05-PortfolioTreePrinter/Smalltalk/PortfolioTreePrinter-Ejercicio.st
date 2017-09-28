@@ -470,15 +470,15 @@ accountTransferNetOf: aSummarizingAccount
 
 	^aSummarizingAccount transactions inject: 0 into: [:transferNet :aTransaction | aTransaction updateTransferNet: transferNet ] .! !
 
-!PortfolioTest methodsFor: 'test support' stamp: 'HernanWilkinson 9/6/2016 19:43'!
-investmentEarningsOf: aReceptiveAccount 
-	
-	self shouldBeImplemented ! !
+!PortfolioTest methodsFor: 'test support' stamp: 'ISW 9/28/2017 04:35:40'!
+investmentEarningsOf: aSummarizingAccount 
 
-!PortfolioTest methodsFor: 'test support' stamp: 'HernanWilkinson 9/6/2016 19:43'!
-investmentNetOf: aReceptiveAccount 
-	
-	self shouldBeImplemented ! !
+	^aSummarizingAccount transactions inject: 0 into: [:investmentEarnings :aTransaction | aTransaction updateInvestmentEarnings: investmentEarnings ] .! !
+
+!PortfolioTest methodsFor: 'test support' stamp: 'ISW 9/28/2017 04:26:47'!
+investmentNetOf: aSummarizingAccount 
+
+	^aSummarizingAccount transactions inject: 0 into: [:investmentNet :aTransaction | aTransaction updateInvestmentNet: investmentNet ] .! !
 
 !PortfolioTest methodsFor: 'test support' stamp: 'HernanWilkinson 9/6/2016 19:43'!
 portofolioTreeOf: aPortfolio namingAccountWith: aDictionary 
@@ -533,10 +533,74 @@ register: aValue on: account
 
 !classDefinition: #CertificateOfDeposit category: #'PortfolioTreePrinter-Ejercicio'!
 AccountTransaction subclass: #CertificateOfDeposit
-	instanceVariableNames: 'value tna numberOfDays account'
+	instanceVariableNames: 'value rate numberOfDays account'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'PortfolioTreePrinter-Ejercicio'!
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:18:32'!
+initializeFor: anAmount during: aNumberOfDays at: anInterestRate
+
+	value := anAmount.
+	rate := anInterestRate.
+	numberOfDays := aNumberOfDays.! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:29:45'!
+numberOfDays
+
+	^ numberOfDays ! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:29:34'!
+rate
+
+	^ rate ! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:09:21'!
+updateBalance: aBalance
+
+	^aBalance - self value! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:34:38'!
+updateInvestmentEarnings: anInvestemntEarning
+
+	^ anInvestemntEarning  + (value * ((self rate / 360) * self numberOfDays))! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:38:18'!
+updateInvestmentNet: anInvestmentNet
+
+	^ anInvestmentNet + self value ! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:38:38'!
+updateTransferNet: aTransferNet
+
+	^aTransferNet! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:08:46'!
+value
+
+	^value.! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'CertificateOfDeposit class' category: #'PortfolioTreePrinter-Ejercicio'!
+CertificateOfDeposit class
+	instanceVariableNames: ''!
+
+!CertificateOfDeposit class methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:20:20'!
+for: anAmount during: aNumberOfDays at: anInterestRate
+
+	^self new initializeFor: anAmount during: aNumberOfDays at: anInterestRate
+! !
+
+!CertificateOfDeposit class methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:19:51'!
+register: anAmount during: aNumberOfDays at: anInterestRate on: aSummarizingAccount
+
+	| certifcate |
+	
+	certifcate := self for: anAmount during: aNumberOfDays at: anInterestRate.
+	aSummarizingAccount register: certifcate.
+		
+	^ certifcate! !
 
 
 !classDefinition: #Deposit category: #'PortfolioTreePrinter-Ejercicio'!
@@ -556,15 +620,21 @@ initializeFor: aValue
 updateBalance: balance
 	^ balance + self value.! !
 
+!Deposit methodsFor: 'value' stamp: 'ISW 9/28/2017 04:30:59'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
+
 !Deposit methodsFor: 'value' stamp: 'HernanWilkinson 7/13/2011 18:38'!
 value
 
 	^ value! !
 
 
-!Deposit methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:39:23'!
-updateTransferNet: aSmallInteger 
-	^0! !
+!Deposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:31:10'!
+updateTransferNet: aTransferNet
+
+	^aTransferNet! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -603,6 +673,11 @@ initializefor: aTransfer on: anAccount
 !TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 22:01:23'!
 updateBalance: balance
 	^ balance + myTransfer value.! !
+
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:32:16'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
 
 !TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:41:42'!
 updateTransferNet: aTransferNet
@@ -645,6 +720,11 @@ initializefor: aTransfer on: anAccount
 !TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:42:00'!
 updateBalance: balance
 	^ balance - myTransfer value.! !
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:32:29'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
 
 !TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:40:58'!
 updateTransferNet: aTransferNet 
@@ -689,15 +769,21 @@ initializeFor: aValue
 updateBalance: balance
 	^balance - self value.! !
 
+!Withdraw methodsFor: 'value' stamp: 'ISW 9/28/2017 04:32:35'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
+
 !Withdraw methodsFor: 'value' stamp: 'HernanWilkinson 7/14/2011 05:54'!
 value
 
 	^ value ! !
 
 
-!Withdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:39:56'!
-updateTransferNet: aSmallInteger 
-	^0.! !
+!Withdraw methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:33:08'!
+updateTransferNet: aTransferNet
+
+	^aTransferNet ! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -931,14 +1017,19 @@ Object subclass: #SummarizingAccountAdapter
 	poolDictionaries: ''
 	category: 'PortfolioTreePrinter-Ejercicio'!
 
-!SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:51:06'!
+!SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:54:32'!
 initializeWith: aReceptiveAccount 
 	translations := Dictionary new.
 	translations 
-		at: Withdraw put: 'Extraccion por ';
-		at: Deposit put: 'Deposito por ';
-		at: TransferWithdraw put: 'Transferencia por -';
-		at: TransferDeposit put: 'Transferencia por '.
+		at: Withdraw put: [ :aTransaction | 'Extraccion por ', aTransaction value asString ];
+		at: Deposit put: [ :aTransaction | 'Deposito por ', aTransaction value asString ];
+		at: TransferWithdraw put: [ :aTransaction | 'Transferencia por -', aTransaction value asString ];
+		at: TransferDeposit put: [ :aTransaction | 'Transferencia por ', aTransaction value asString ];
+		at: CertificateOfDeposit put: [ :aTransaction | 'Plazo fijo por ', aTransaction value asString, 
+															    ' durante ', aTransaction numberOfDays asString, 
+															    ' dias a una tna de ', (aTransaction rate * 100) asString,
+															    '%' ].
+		
 	account := aReceptiveAccount.! !
 
 !SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:25:30'!
@@ -949,11 +1040,12 @@ summarize
 	lines := transactionList collect: [ :aTransaction | self summarize: aTransaction ].
 	^lines! !
 
-!SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 15:51:19'!
+!SummarizingAccountAdapter methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:51:58'!
 summarize: aTransaction
 
 	| line |
-	line := (translations at: aTransaction class), aTransaction value asString. 
+	line := (translations at: aTransaction class) value: aTransaction.
+	
 	^line.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
