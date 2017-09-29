@@ -121,6 +121,25 @@ test08PortfolioKnowsTransactionsRegisteredByItsManagedAccounts
 	self assert: (composedPortfolio registers: deposit2).
 	self assert: (composedPortfolio registers: deposit3).! !
 
+!PortfolioTest methodsFor: 'tests' stamp: 'HernanWilkinson 9/12/2011 13:25'!
+test08PortofolioKnowsTransactionsRegisteredByItsManagedAccounts 
+
+	| account1 account2 account3 complexPortfolio composedPortfolio deposit1 deposit2 deposit3 |
+	
+	account1 := ReceptiveAccount new.
+	account2 := ReceptiveAccount new.
+	account3 := ReceptiveAccount new.
+	complexPortfolio := Portfolio with: account1 with: account2.
+	composedPortfolio := Portfolio with: complexPortfolio with: account3.
+		
+	deposit1 := Deposit register: 100 on: account1.
+	deposit2 := Deposit register: 200 on: account2.
+	deposit3 := Deposit register: 300 on: account3.
+		
+ 	self assert: (composedPortfolio registers: deposit1).
+	self assert: (composedPortfolio registers: deposit2).
+	self assert: (composedPortfolio registers: deposit3).! !
+
 !PortfolioTest methodsFor: 'tests' stamp: 'HernanWilkinson 7/13/2011 19:00'!
 test10ReceptiveAccountManageItSelf 
 
@@ -551,6 +570,16 @@ reversePortofolioTreeOf: aPortfolio namingAccountWith: aDictionary
 	
 	^ (ReversePortfolioTreePrinter of: aPortfolio namingAccountsWith: aDictionary ) lines! !
 
+!PortfolioTest methodsFor: 'test support' stamp: 'NH 9/26/2017 14:44:37'!
+summarize: aTransaction 
+	| line translations |
+	line := ''.
+	line 
+		append: (translations at: aTransaction class);
+		append: ' por ';
+		append: aTransaction value asString. 
+! !
+
 
 !PortfolioTest methodsFor: 'asserting' stamp: 'HAW 8/13/2017 17:58:44'!
 should: aBlock notTakeMoreThanMilliseconds: aTimeInMillis
@@ -570,14 +599,19 @@ initializeFor: aReceptiveAccount
 	
 	account := aReceptiveAccount ! !
 
-!AccountSummaryWithAllInvestmentInformation methodsFor: 'as yet unclassified' stamp: 'HernanWilkinson 7/17/2011 23:58'!
+!AccountSummaryWithAllInvestmentInformation methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 21:30:32'!
 lines 
-
-	| lines investmentEarnings |
+		
+	| lines investmentEarnings investmentEarningsLines investmentClosure |
 	
 	investmentEarnings := InvestmentNetVisitor for: account.
+	investmentClosure := ConcurrentClosure for:
+		[ investmentEarnings value. ].
+
 	lines := (AccountSummaryWithInvestmentEarnings for: account) lines.
-	lines add: 'Inversiones por ', investmentEarnings value printString.
+	investmentEarningsLines := investmentClosure value.
+	
+	lines add: 'Inversiones por ', investmentEarningsLines printString .
 	
 	 ^ lines! !
 
@@ -605,14 +639,19 @@ initializeFor: aReceptiveAccount
 	
 	account := aReceptiveAccount ! !
 
-!AccountSummaryWithInvestmentEarnings methodsFor: 'as yet unclassified' stamp: 'HernanWilkinson 7/17/2011 23:53'!
+!AccountSummaryWithInvestmentEarnings methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 21:23:12'!
 lines 
 
-	| lines investmentEarnings |
+	| lines investmentEarnings investmentEarningsLines investmentClosure |
 	
 	investmentEarnings := InvestmentEarningVisitor for: account.
+	investmentClosure := ConcurrentClosure for:
+		[ investmentEarnings value. ].
+		
 	lines := (AccountSummary for: account) lines.
-	lines add: 'Ganancias por ', investmentEarnings value printString.
+	investmentEarningsLines := investmentClosure value.
+	
+	lines add: 'Ganancias por ', investmentEarningsLines printString .
 	
 	 ^ lines! !
 
@@ -634,6 +673,7 @@ Object subclass: #AccountTransaction
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
+
 
 !AccountTransaction methodsFor: 'evaluating' stamp: 'HernanWilkinson 9/6/2016 19:51'!
 affectBalance: aBalance
@@ -668,6 +708,44 @@ AccountTransaction subclass: #CertificateOfDeposit
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:18:32'!
+initializeFor: anAmount during: aNumberOfDays at: anInterestRate
+
+	value := anAmount.
+	rate := anInterestRate.
+	numberOfDays := aNumberOfDays.! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:29:45'!
+numberOfDays
+
+	^ numberOfDays ! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:29:34'!
+rate
+
+	^ rate ! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:09:21'!
+updateBalance: aBalance
+
+	^aBalance - self value! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:34:38'!
+updateInvestmentEarnings: anInvestemntEarning
+
+	^ anInvestemntEarning  + (value * ((self rate / 360) * self numberOfDays))! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:38:18'!
+updateInvestmentNet: anInvestmentNet
+
+	^ anInvestmentNet + self value ! !
+
+!CertificateOfDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:38:38'!
+updateTransferNet: aTransferNet
+
+	^aTransferNet! !
+
 
 !CertificateOfDeposit methodsFor: 'accessing' stamp: 'HernanWilkinson 7/14/2011 06:23'!
 days
@@ -710,6 +788,13 @@ accept: aTransactionVisitor
 CertificateOfDeposit class
 	instanceVariableNames: ''!
 
+!CertificateOfDeposit class methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:20:20'!
+for: anAmount during: aNumberOfDays at: anInterestRate
+
+	^self new initializeFor: anAmount during: aNumberOfDays at: anInterestRate
+! !
+
+
 !CertificateOfDeposit class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/14/2011 05:12'!
 for: aValue during: aNumberOfDay at: aTNA on: anAccount
 
@@ -733,16 +818,31 @@ AccountTransaction subclass: #Deposit
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
 
+!Deposit methodsFor: 'initialization' stamp: 'HernanWilkinson 7/13/2011 18:45'!
+initializeFor: aValue
+
+	value := aValue ! !
+
+
+!Deposit methodsFor: 'value' stamp: 'NH 9/25/2017 22:02:06'!
+updateBalance: balance
+	^ balance + self value.! !
+
+!Deposit methodsFor: 'value' stamp: 'ISW 9/28/2017 04:30:59'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
+
 !Deposit methodsFor: 'value' stamp: 'HernanWilkinson 7/13/2011 18:38'!
 value
 
 	^ value! !
 
 
-!Deposit methodsFor: 'initialization' stamp: 'HernanWilkinson 7/13/2011 18:45'!
-initializeFor: aValue
+!Deposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:31:10'!
+updateTransferNet: aTransferNet
 
-	value := aValue ! !
+	^aTransferNet! !
 
 
 !Deposit methodsFor: 'balance' stamp: 'HernanWilkinson 9/6/2016 19:49'!
@@ -785,6 +885,25 @@ AccountTransaction subclass: #TransferDeposit
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
 
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:58:31'!
+initializefor: aTransfer on: anAccount
+	myTransfer := aTransfer.
+	ownerAccount := anAccount.! !
+
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 22:01:23'!
+updateBalance: balance
+	^ balance + myTransfer value.! !
+
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:32:16'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
+
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:41:42'!
+updateTransferNet: aTransferNet
+	^ aTransferNet + myTransfer value.! !
+
+
 !TransferDeposit methodsFor: 'balance' stamp: 'HernanWilkinson 9/6/2016 19:50'!
 affectBalance: aBalance
 
@@ -820,6 +939,18 @@ transfer
 TransferDeposit class
 	instanceVariableNames: ''!
 
+!TransferDeposit class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:57:23'!
+for: aTransfer on: anAccount
+	^ self new  initializefor: self on: anAccount.! !
+
+!TransferDeposit class methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:57:30'!
+register: aTransfer on: anAccount
+	| deposit |
+	deposit _ self new initializefor: aTransfer on: anAccount.
+	anAccount register: deposit.
+	^ deposit.! !
+
+
 !TransferDeposit class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/14/2011 05:52'!
 of: aTransfer 
 
@@ -833,6 +964,30 @@ AccountTransaction subclass: #TransferWithdraw
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
 
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'HernanWilkinson 9/6/2016 19:50'!
+affectBalance: aBalance
+
+	^aBalance - self value! !
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 22:00:04'!
+initializefor: aTransfer on: anAccount
+	myTransfer := aTransfer.
+	ownerAccount := anAccount.! !
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:42:00'!
+updateBalance: balance
+	^ balance - myTransfer value.! !
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:32:29'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 17:40:58'!
+updateTransferNet: aTransferNet 
+	^ aTransferNet - myTransfer value.! !
+
+
 !TransferWithdraw methodsFor: 'initialization' stamp: 'HernanWilkinson 7/14/2011 05:53'!
 initializeOf: aTransfer
 
@@ -843,12 +998,6 @@ initializeOf: aTransfer
 value 
 
 	^ transfer value! !
-
-
-!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'HernanWilkinson 9/6/2016 19:50'!
-affectBalance: aBalance
-
-	^aBalance - self value! !
 
 
 !TransferWithdraw methodsFor: 'visiting' stamp: 'HernanWilkinson 7/14/2011 06:53'!
@@ -868,6 +1017,18 @@ transfer
 TransferWithdraw class
 	instanceVariableNames: ''!
 
+!TransferWithdraw class methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:59:26'!
+for: aTransfer on: anAccount
+	^ self new  initializefor: self on: anAccount.! !
+
+!TransferWithdraw class methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:56:58'!
+register: aTransfer on: anAccount
+	| withdraw |
+	withdraw := self new initializefor: aTransfer on: anAccount.
+	anAccount register: withdraw.
+	^withdraw.! !
+
+
 !TransferWithdraw class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/14/2011 05:53'!
 of: aTransfer 
 
@@ -881,22 +1042,37 @@ AccountTransaction subclass: #Withdraw
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
 
+!Withdraw methodsFor: 'initialization' stamp: 'HernanWilkinson 7/13/2011 18:46'!
+initializeFor: aValue
+
+	value := aValue ! !
+
+
+!Withdraw methodsFor: 'value' stamp: 'NH 9/25/2017 22:02:24'!
+updateBalance: balance
+	^balance - self value.! !
+
+!Withdraw methodsFor: 'value' stamp: 'ISW 9/28/2017 04:32:35'!
+updateInvestmentNet: anInvestmentNet
+
+	^anInvestmentNet! !
+
 !Withdraw methodsFor: 'value' stamp: 'HernanWilkinson 7/14/2011 05:54'!
 value
 
 	^ value ! !
 
 
+!Withdraw methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 04:33:08'!
+updateTransferNet: aTransferNet
+
+	^aTransferNet ! !
+
+
 !Withdraw methodsFor: 'balance' stamp: 'HernanWilkinson 9/6/2016 19:50'!
 affectBalance: aBalance
 
 	^aBalance - value! !
-
-
-!Withdraw methodsFor: 'initialization' stamp: 'HernanWilkinson 7/13/2011 18:46'!
-initializeFor: aValue
-
-	value := aValue ! !
 
 
 !Withdraw methodsFor: 'visiting' stamp: 'HernanWilkinson 7/14/2011 06:55'!
@@ -1253,6 +1429,40 @@ for: aReceptiveAccount
 	^ self new initializeFor: aReceptiveAccount ! !
 
 
+!classDefinition: #ConcurrentClosure category: #'PortfolioTimeConsuming-Ejercicio'!
+Object subclass: #ConcurrentClosure
+	instanceVariableNames: 'closure semaphore value'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'PortfolioTimeConsuming-Ejercicio'!
+
+!ConcurrentClosure methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 21:26:50'!
+initializeWith: aClosure
+
+	closure := aClosure.
+	semaphore := Semaphore new.
+	
+	[value := closure value.
+	semaphore signal.] fork.! !
+
+!ConcurrentClosure methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 21:20:14'!
+value
+
+	semaphore wait.
+	^ value! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'ConcurrentClosure class' category: #'PortfolioTimeConsuming-Ejercicio'!
+ConcurrentClosure class
+	instanceVariableNames: ''!
+
+!ConcurrentClosure class methodsFor: 'as yet unclassified' stamp: 'ISW 9/28/2017 20:57:21'!
+for: aClosure
+
+	^ self new initializeWith: aClosure! !
+
+
 !classDefinition: #SummarizingAccount category: #'PortfolioTimeConsuming-Ejercicio'!
 Object subclass: #SummarizingAccount
 	instanceVariableNames: ''
@@ -1282,6 +1492,7 @@ transactions
 	self subclassResponsibility ! !
 
 
+
 !SummarizingAccount methodsFor: 'visitor accepting' stamp: 'HernanWilkinson 7/14/2011 07:00'!
 accept: aSummarizingAccountVisitor
 
@@ -1295,6 +1506,7 @@ SummarizingAccount subclass: #Portfolio
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
 
+
 !Portfolio methodsFor: 'testing' stamp: 'HernanWilkinson 7/13/2011 19:22'!
 manages: anAccount
 
@@ -1304,12 +1516,6 @@ manages: anAccount
 registers: aTransaction
 
 	^ accounts anySatisfy: [ :anAccount | anAccount registers: aTransaction ]  ! !
-
-
-!Portfolio methodsFor: 'initialization' stamp: 'HernanWilkinson 7/13/2011 19:19'!
-initializeWithAll: aCollectionOfAccounts
-
-	accounts := aCollectionOfAccounts   ! !
 
 
 !Portfolio methodsFor: 'transactions' stamp: 'HernanWilkinson 7/13/2011 19:20'!
@@ -1333,6 +1539,31 @@ transactionsOf: anAccount
 	! !
 
 
+!Portfolio methodsFor: 'initialization' stamp: 'NH 9/24/2017 17:22:52'!
+addAccount: anAccount
+	(self manages: anAccount)
+		ifTrue: [ self error: self class accountAlreadyManagedErrorMessage ]
+		ifFalse: [ accounts add: anAccount ].! !
+
+!Portfolio methodsFor: 'initialization' stamp: 'HernanWilkinson 7/13/2011 19:19'!
+initializeWithAll: aCollectionOfAccounts
+
+	accounts := aCollectionOfAccounts   ! !
+
+!Portfolio methodsFor: 'initialization' stamp: 'NH 9/24/2017 17:24:31'!
+with: anAccount and: anotherAccount
+
+	accounts := OrderedCollection new.
+	self addAccount: anAccount.
+	self addAccount: anotherAccount.! !
+
+!Portfolio methodsFor: 'initialization' stamp: 'NH 9/24/2017 17:22:52'!
+withAll: anAccountCollection
+	accounts _ OrderedCollection new.
+	anAccountCollection do: [ :anAccount |
+		self addAccount: anAccount ].! !
+
+
 !Portfolio methodsFor: 'visiting' stamp: 'HernanWilkinson 7/14/2011 06:36'!
 visitAccountsWith: aPortfolioTreePrinter 
 	
@@ -1349,6 +1580,25 @@ accept: aSummarizingAccountVisitor
 !classDefinition: 'Portfolio class' category: #'PortfolioTimeConsuming-Ejercicio'!
 Portfolio class
 	instanceVariableNames: ''!
+
+!Portfolio class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/13/2011 18:48'!
+with: anAccount1 with: anAccount2
+
+	^ self withAll: (Array with: anAccount1 with: anAccount2 )! !
+
+!Portfolio class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/13/2011 19:40'!
+withAll: aCollectionOfAccounts
+
+	aCollectionOfAccounts asSet size = aCollectionOfAccounts size ifFalse: [ self error: self accountAlreadyManagedErrorMessage  ].
+	
+	aCollectionOfAccounts do: [ :sourceAccount | 
+		aCollectionOfAccounts do: [ :targetAccount | 
+			(sourceAccount = targetAccount) not ifTrue: [
+				(sourceAccount manages: targetAccount) ifTrue: [ self error: self accountAlreadyManagedErrorMessage ]]]].
+	
+	^self new initializeWithAll: aCollectionOfAccounts ! !
+
+
 
 !Portfolio class methodsFor: 'assertions' stamp: 'HernanWilkinson 9/18/2011 17:22'!
 check: sourceAccount doesNotManagaAnyOf: aCollectionOfAccounts
@@ -1385,24 +1635,6 @@ accountNotManagedMessageDescription
 	
 	^ 'Account not managed'! !
 
-
-!Portfolio class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/13/2011 18:48'!
-with: anAccount1 with: anAccount2
-
-	^ self withAll: (Array with: anAccount1 with: anAccount2 )! !
-
-!Portfolio class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/13/2011 19:40'!
-withAll: aCollectionOfAccounts
-
-	aCollectionOfAccounts asSet size = aCollectionOfAccounts size ifFalse: [ self error: self accountAlreadyManagedErrorMessage  ].
-	
-	aCollectionOfAccounts do: [ :sourceAccount | 
-		aCollectionOfAccounts do: [ :targetAccount | 
-			(sourceAccount = targetAccount) not ifTrue: [
-				(sourceAccount manages: targetAccount) ifTrue: [ self error: self accountAlreadyManagedErrorMessage ]]]].
-	
-	^self new initializeWithAll: aCollectionOfAccounts ! !
-
 
 !classDefinition: #ReceptiveAccount category: #'PortfolioTimeConsuming-Ejercicio'!
 SummarizingAccount subclass: #ReceptiveAccount
@@ -1416,19 +1648,6 @@ initialize
 
 	super initialize.
 	transactions := OrderedCollection new.! !
-
-
-!ReceptiveAccount methodsFor: 'testing' stamp: 'HernanWilkinson 7/13/2011 18:37'!
-manages: anAccount
-
-	^ self = anAccount 
-! !
-
-!ReceptiveAccount methodsFor: 'testing' stamp: 'HernanWilkinson 7/13/2011 18:37'!
-registers: aTtransaction
-
-	^ transactions includes: aTtransaction 
-! !
 
 
 !ReceptiveAccount methodsFor: 'transactions' stamp: 'HernanWilkinson 7/14/2011 05:57'!
@@ -1447,6 +1666,20 @@ register: aTransaction
 transactions 
 
 	^ transactions copy! !
+
+
+
+!ReceptiveAccount methodsFor: 'testing' stamp: 'HernanWilkinson 7/13/2011 18:37'!
+manages: anAccount
+
+	^ self = anAccount 
+! !
+
+!ReceptiveAccount methodsFor: 'testing' stamp: 'HernanWilkinson 7/13/2011 18:37'!
+registers: aTtransaction
+
+	^ transactions includes: aTtransaction 
+! !
 
 
 !ReceptiveAccount methodsFor: 'visiting' stamp: 'HernanWilkinson 7/14/2011 06:52'!
@@ -1571,6 +1804,26 @@ Object subclass: #Transfer
 	poolDictionaries: ''
 	category: 'PortfolioTimeConsuming-Ejercicio'!
 
+!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/26/2017 07:52:15'!
+initializefor: anAmount from: anAccount to: aReceptorAccount.
+	value := anAmount .
+	sourceAccount := anAccount .
+	targetAccount := aReceptorAccount .
+	TransferWithdraw register: self on: anAccount.
+	TransferDeposit register: self on: aReceptorAccount.
+! !
+
+!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 20:35:32'!
+originAccount
+	^sourceAccount.! !
+
+!Transfer methodsFor: 'as yet unclassified' stamp: 'NH 9/25/2017 21:19:39'!
+updateBalance: balance of: anAccount
+	^(self originAccount = anAccount) 
+		ifTrue: [balance  - self value]
+		ifFalse: [balance + self value].! !
+
+
 !Transfer methodsFor: 'value' stamp: 'HernanWilkinson 7/14/2011 05:55'!
 value
 
@@ -1600,6 +1853,7 @@ initializeFor: aValue from: aSourceAccount to: aTargetAccount
 !classDefinition: 'Transfer class' category: #'PortfolioTimeConsuming-Ejercicio'!
 Transfer class
 	instanceVariableNames: ''!
+
 
 !Transfer class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/13/2011 19:41'!
 for: aValue from: sourceAccount to: targetAccount
