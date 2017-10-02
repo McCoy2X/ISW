@@ -440,6 +440,10 @@ Object subclass: #CabinDoorState
 	poolDictionaries: ''
 	category: 'Elevator-Ejercicio'!
 
+!CabinDoorState methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 11:39:47'!
+X1
+	self subclassResponsibility.! !
+
 !CabinDoorState methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 13:53:22'!
 isClosed
 	self subclassResponsibility.! !
@@ -488,6 +492,10 @@ CabinDoorState subclass: #ClosingDoorState
 	poolDictionaries: ''
 	category: 'Elevator-Ejercicio'!
 
+!ClosingDoorState methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 11:41:37'!
+X1
+	^OpeningDoorState new.! !
+
 !ClosingDoorState methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:19:43'!
 isClosed
 	^false! !
@@ -516,6 +524,10 @@ CabinDoorState subclass: #OpenDoorState
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Elevator-Ejercicio'!
+
+!OpenDoorState methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 11:40:31'!
+X1
+	^ self.! !
 
 !OpenDoorState methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 13:57:57'!
 isClosed
@@ -546,6 +558,10 @@ CabinDoorState subclass: #OpeningDoorState
 	poolDictionaries: ''
 	category: 'Elevator-Ejercicio'!
 
+!OpeningDoorState methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 11:42:19'!
+X1
+	^self.! !
+
 !OpeningDoorState methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:26:02'!
 isClosed
 	
@@ -570,6 +586,10 @@ Object subclass: #CabinState
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Elevator-Ejercicio'!
+
+!CabinState methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 11:50:53'!
+X2: aDoorState
+	self subclassResponsibility ! !
 
 !CabinState methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 15:56:40'!
 isMoving
@@ -626,63 +646,79 @@ initialize
 	cabinDoorState := OpenDoorState new.! !
 
 
-!ElevatorController methodsFor: 'testing' stamp: 'NH 9/30/2017 13:13:09'!
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 13:13:09'!
 cabinFloorNumber
 	
 	^cabinFloorNumber! !
 
-!ElevatorController methodsFor: 'testing' stamp: 'NH 9/30/2017 13:52:44'!
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 16:18:59'!
+isCabinDoorClosed
+	^cabinDoorState isClosed.! !
+
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 15:26:12'!
+isCabinDoorClosing
+	^cabinDoorState isClosing.! !
+
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 13:52:44'!
 isCabinDoorOpened
 	^cabinDoorState isOpen.! !
 
-!ElevatorController methodsFor: 'testing' stamp: 'NH 9/30/2017 16:14:51'!
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 15:26:30'!
+isCabinDoorOpening
+	^cabinDoorState isOpening.! !
+
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 16:16:07'!
+isCabinMoving
+	"Bad smell de sobrediseño"
+	^ self isCabinStopped not.! !
+
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 16:14:51'!
 isCabinStopped
 	^cabinState isStopped ! !
 
-!ElevatorController methodsFor: 'testing' stamp: 'NH 9/30/2017 16:02:26'!
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 16:02:26'!
 isIdle
 	^self isWorking not.! !
 
+!ElevatorController methodsFor: 'elevator state' stamp: 'NH 9/30/2017 16:06:14'!
+isWorking
+	^ (cabinState isMoving or: cabinDoorState isClosing) or: cabinDoorState isOpening.! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:30:03'!
+
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 9/30/2017 16:30:03'!
 cabinDoorClosed
 	"closes the door and moves the elevator"
 	cabinDoorState := ClosedDoorState new.
 	cabinState := CabinStateMoving new.! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:28:34'!
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 9/30/2017 16:28:34'!
 cabinDoorOpened
 	cabinDoorState := OpenDoorState new.
 	! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:23:41'!
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 9/30/2017 16:23:41'!
 cabinOnFloor: aFloorNumber
 	cabinFloorNumber := aFloorNumber.
 	cabinState := CabinStateStopped new.
 	cabinDoorState := OpeningDoorState new.! !
+
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 10/2/2017 11:44:44'!
+waitForPeopleTimedOut
+	cabinDoorState := ClosingDoorState new.! !
+
+
+!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 10:24:41'!
+closeCabinDoor
+	"bad smell"
+	self shouldBeImplemented.! !
 
 !ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:30:38'!
 goUpPushedFromFloor: aFloor 
 	cabinDoorState _ ClosingDoorState new.
 	! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:18:59'!
-isCabinDoorClosed
-	^cabinDoorState isClosed.! !
+!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 11:50:26'!
+openCabinDoor
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 15:26:12'!
-isCabinDoorClosing
-	^cabinDoorState isClosing.! !
-
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 15:26:30'!
-isCabinDoorOpening
-	^cabinDoorState isOpening.! !
-
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:16:07'!
-isCabinMoving
-	"Bad smell de sobrediseño"
-	^ self isCabinStopped not.! !
-
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 9/30/2017 16:06:14'!
-isWorking
-	^ (cabinState isMoving or: cabinDoorState isClosing) or: cabinDoorState isOpening.! !
+	"check cabin  not moving"
+	^cabinDoorState := cabinState X2: cabinDoorState.! !
