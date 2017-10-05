@@ -455,6 +455,175 @@ test05ElevatorGetsIdleWhenDoorGetOpened
 	self assert: elevatorController cabinFloorNumber = 1! !
 
 
+!classDefinition: #CabinState category: #'Elevator-Ejercicio'!
+Object subclass: #CabinState
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!CabinState methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:37:27'!
+isMoving
+	self subclassResponsibility.! !
+
+!CabinState methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:28:14'!
+isStopped
+	self subclassResponsibility.! !
+
+
+!classDefinition: #Moving category: #'Elevator-Ejercicio'!
+CabinState subclass: #Moving
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Moving methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:05:34'!
+isMoving
+	^true.! !
+
+!Moving methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:04:57'!
+isStopped
+	^false.! !
+
+
+!classDefinition: #Stopped category: #'Elevator-Ejercicio'!
+CabinState subclass: #Stopped
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Stopped methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:38:44'!
+isMoving
+	^false! !
+
+!Stopped methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:28:37'!
+isStopped
+	^true.! !
+
+
+!classDefinition: #DoorState category: #'Elevator-Ejercicio'!
+Object subclass: #DoorState
+	instanceVariableNames: 'state cabinState floorsToGo door floorNumber'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!DoorState methodsFor: 'associating' stamp: 'NH 10/4/2017 18:28:56'!
+isOpened
+	self subclassResponsibility.! !
+
+
+!DoorState methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:42:58'!
+isClosed
+	self subclassResponsibility.! !
+
+!DoorState methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:42:10'!
+isClosing
+	self subclassResponsibility.! !
+
+!DoorState methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:40:28'!
+isOpening
+	self subclassResponsibility.! !
+
+
+!classDefinition: #Closed category: #'Elevator-Ejercicio'!
+DoorState subclass: #Closed
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Closed methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:08:32'!
+isClosed
+	^true.! !
+
+!Closed methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:08:16'!
+isClosing
+	^false.! !
+
+!Closed methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:07:17'!
+isOpened
+	^false.! !
+
+!Closed methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:07:46'!
+isOpening
+	^false.! !
+
+
+!classDefinition: #Closing category: #'Elevator-Ejercicio'!
+DoorState subclass: #Closing
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Closing methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:43:14'!
+isClosed
+	^false.! !
+
+!Closing methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:42:37'!
+isClosing
+	^true.! !
+
+!Closing methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:40:06'!
+isOpened
+	^false.! !
+
+!Closing methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:41:31'!
+isOpening
+	^false! !
+
+
+!classDefinition: #Open category: #'Elevator-Ejercicio'!
+DoorState subclass: #Open
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Open methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:14:36'!
+isClosed
+	^false.! !
+
+!Open methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:14:17'!
+isClosing
+	^false.! !
+
+!Open methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:29:07'!
+isOpened
+	^true.! !
+
+!Open methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:13:49'!
+isOpening
+	^false.! !
+
+
+!classDefinition: #Opening category: #'Elevator-Ejercicio'!
+DoorState subclass: #Opening
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Opening methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:11:53'!
+isClosed
+	^false.! !
+
+!Opening methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:11:36'!
+isClosing
+	^false.! !
+
+!Opening methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:11:01'!
+isOpened
+	^false.! !
+
+!Opening methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:11:17'!
+isOpening
+	^true.! !
+
+
 !classDefinition: #ElevatorController category: #'Elevator-Ejercicio'!
 Object subclass: #ElevatorController
 	instanceVariableNames: 'state cabinState floorsToGo door floorNumber'
@@ -462,30 +631,30 @@ Object subclass: #ElevatorController
 	poolDictionaries: ''
 	category: 'Elevator-Ejercicio'!
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/3/2017 16:38:12'!
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 10/5/2017 18:04:16'!
 cabinDoorClosed
 	self isCabinDoorClosing ifFalse: [ElevatorEmergency doorSensor signal].
-	door := #closed.
-	cabinState := #moving.! !
+	door := Closed new.
+	cabinState := Moving new.! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/3/2017 16:02:15'!
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 10/5/2017 18:12:51'!
 cabinDoorOpened
-	state _ (floorsToGo = 0) ifTrue: #idle ifFalse: #working. "queda en working si todavia hay que recorrer pisos"
-	door _ #open.! !
+	state _ (floorsToGo = 0) ifTrue: Idle new ifFalse: Working new. "queda en working si todavia hay que recorrer pisos"
+	door _ Open new.! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/2/2017 21:26:31'!
-cabinFloorNumber
-
-	^floorNumber ! !
-
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/3/2017 16:46:12'!
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 10/5/2017 18:10:25'!
 cabinOnFloor: aFloorNumber
 	aFloorNumber = (floorNumber + 1) ifFalse: [ ElevatorEmergency cabinSensor signal ].
 	floorNumber _ aFloorNumber.
-	cabinState _ #stopped.
-	door _ #opening.
-	state _ #working.
+	cabinState _ Stopped new.
+	door _ Opening new.
+	state _ Working new.
 	floorsToGo _ floorsToGo - 1.! !
+
+!ElevatorController methodsFor: 'automatic behaviour' stamp: 'NH 10/5/2017 18:17:18'!
+waitForPeopleTimedOut
+	door _ Closing new.! !
+
 
 !ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/3/2017 16:28:09'!
 closeCabinDoor
@@ -493,72 +662,121 @@ closeCabinDoor
 		ifFalse: [self waitForPeopleTimedOut].
 	"Fun fact: el complemento de la condicion es (????)"! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/3/2017 15:26:56'!
+!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:32:14'!
 goUpPushedFromFloor: aFloorNumber 
 	
-	state := #working.
-	door := #closing.
+	state := Working new.
+	door := Closing new.
 	floorsToGo _ floorsToGo + 1.! !
 
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/3/2017 15:59:09'!
+!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:16:12'!
 openCabinDoor
-	door _ cabinState = #moving
-		ifTrue: [ #closed ]
+	door _ cabinState isMoving
+		ifTrue: [ Closed new ]
 		ifFalse: [
-			door = #open
-				ifTrue: [ #open ]
-				ifFalse: [ #opening ]].! !
-
-!ElevatorController methodsFor: 'as yet unclassified' stamp: 'NH 10/3/2017 15:42:55'!
-waitForPeopleTimedOut
-	door _ #closing.! !
+			door isOpened 
+				ifTrue: [ Open new ]
+				ifFalse: [ Opening new ]].! !
 
 
-!ElevatorController methodsFor: 'initialization' stamp: 'NH 10/3/2017 15:23:50'!
+!ElevatorController methodsFor: 'initialization' stamp: 'NH 10/4/2017 18:20:32'!
 initialize
 
-	state _ #idle.
-	door _ #open.
+	state _ Idle new.
+	door _ Open new.
 	floorNumber _ 0.
-	cabinState _ #stopped.
+	cabinState _ Stopped new.
 	floorsToGo _ 0.! !
 
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:20:14'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:26:31'!
+cabinFloorNumber
+
+	^floorNumber ! !
+
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:23:55'!
 isCabinDoorClosed
-	^ door = #closed! !
+	^ door isClosed.! !
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:19:09'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:24:05'!
 isCabinDoorClosing
-	^ door = #closing! !
+	^ door isClosing.! !
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:18:08'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:24:25'!
 isCabinDoorOpened
 	
-	^ door = #open! !
+	^ door isOpened.! !
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:18:45'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:24:35'!
 isCabinDoorOpening
-	^ door = #opening! !
+	^ door isOpening.! !
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:23:01'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:23:42'!
 isCabinMoving
 	
-	^ cabinState = #moving! !
+	^ cabinState isMoving.! !
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:23:27'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:23:27'!
 isCabinStopped
 	
-	^ cabinState = #stopped! !
+	^ cabinState isStopped.! !
 
 !ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/3/2017 15:28:50'!
 isCabinWaitingForPeople
 	^floorsToGo > 0.! !
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:13:19'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:21:45'!
 isIdle
-	^ state = #idle! !
+	^ state isIdle.! !
 
-!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/2/2017 21:13:56'!
+!ElevatorController methodsFor: 'elevator status' stamp: 'NH 10/4/2017 18:26:12'!
 isWorking
-	^ state = #working! !
+	^ state isWorking.! !
+
+
+!classDefinition: #ElevatorState category: #'Elevator-Ejercicio'!
+Object subclass: #ElevatorState
+	instanceVariableNames: 'state cabinState floorsToGo door floorNumber'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!ElevatorState methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:22:11'!
+isIdle
+	self subclassResponsibility.! !
+
+!ElevatorState methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:35:45'!
+isWorking
+	self subclassResponsibility.! !
+
+
+!classDefinition: #Idle category: #'Elevator-Ejercicio'!
+ElevatorState subclass: #Idle
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Idle methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:22:32'!
+isIdle
+	^true.! !
+
+!Idle methodsFor: 'as yet unclassified' stamp: 'NH 10/5/2017 18:13:30'!
+isWorking
+	^false.! !
+
+
+!classDefinition: #Working category: #'Elevator-Ejercicio'!
+ElevatorState subclass: #Working
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Elevator-Ejercicio'!
+
+!Working methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:34:29'!
+isIdle
+	^false.! !
+
+!Working methodsFor: 'as yet unclassified' stamp: 'NH 10/4/2017 18:36:34'!
+isWorking
+	^true.! !
