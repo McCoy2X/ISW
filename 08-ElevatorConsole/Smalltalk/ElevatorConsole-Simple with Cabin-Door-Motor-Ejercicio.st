@@ -543,14 +543,14 @@ Object subclass: #Cabin
 	poolDictionaries: ''
 	category: 'ElevatorConsole-Simple with Cabin-Door-Motor-Ejercicio'!
 
-!Cabin methodsFor: 'initialization' stamp: 'NH 10/12/2017 20:33:20'!
+!Cabin methodsFor: 'initialization' stamp: 'NH 10/19/2017 09:21:12'!
 initializeOf: anElevator
 	elevator _ anElevator.
 	door _ CabinDoor of: self.
 	motor _ Motor new.
 	currentFloorNumber _ 0.
 	state _ CabinStoppedState for: self.
-	visitors _ OrderedCollection new.! !
+! !
 
 
 !Cabin methodsFor: 'actions' stamp: 'NH 10/18/2017 18:56:11'!
@@ -709,11 +709,6 @@ door
 	^door! !
 
 
-!Cabin methodsFor: 'as yet unclassified' stamp: 'NH 10/18/2017 18:15:53'!
-accept: aVisitor
-	visitors add: aVisitor.
-	self door accept: aVisitor.! !
-
 !Cabin methodsFor: 'as yet unclassified' stamp: 'NH 10/18/2017 18:47:42'!
 notify: anState 
 	elevator notifyStateChange: anState.! !
@@ -743,12 +738,12 @@ Object subclass: #CabinDoor
 	poolDictionaries: ''
 	category: 'ElevatorConsole-Simple with Cabin-Door-Motor-Ejercicio'!
 
-!CabinDoor methodsFor: 'initialization' stamp: 'NH 10/12/2017 20:33:30'!
+!CabinDoor methodsFor: 'initialization' stamp: 'NH 10/19/2017 09:21:26'!
 initializeOf: aCabin
 	cabin _ aCabin.
 	motor _ Motor new.
 	state _ CabinDoorOpenedState for: self.
-	visitors _ OrderedCollection new.! !
+! !
 
 
 !CabinDoor methodsFor: 'actions' stamp: 'HAW 10/4/2017 10:21:35'!
@@ -906,10 +901,6 @@ signalSensorDesincronized
 	
 	self error: self sensorDesincronizedErrorMessage! !
 
-
-!CabinDoor methodsFor: 'as yet unclassified' stamp: 'NH 10/12/2017 20:33:30'!
-accept: aVisitor
-	visitors add: aVisitor.! !
 
 !CabinDoor methodsFor: 'as yet unclassified' stamp: 'NH 10/18/2017 19:07:26'!
 notify
@@ -1429,10 +1420,9 @@ isWorking
 	^state isWorking! !
 
 
-!Elevator methodsFor: 'notifier' stamp: 'NH 10/18/2017 18:39:57'!
-accept: aVisitor
-	
-	self notifier addObserver: aVisitor.! !
+!Elevator methodsFor: 'notifier' stamp: 'NH 10/19/2017 09:26:45'!
+accept: anObserver
+	self notifier addObserver: anObserver.! !
 
 !Elevator methodsFor: 'notifier' stamp: 'NH 10/18/2017 18:41:33'!
 notifier
@@ -1784,14 +1774,14 @@ Object subclass: #Notifier
 addObserver: anObserver
 	observers add: anObserver ! !
 
-!Notifier methodsFor: 'as yet unclassified' stamp: 'NH 10/18/2017 19:09:07'!
-initializeWith: anElevator
+!Notifier methodsFor: 'as yet unclassified' stamp: 'NH 10/19/2017 09:22:24'!
+initializeFor: anElevator
 	observers _ OrderedCollection new.! !
 
-!Notifier methodsFor: 'as yet unclassified' stamp: 'NH 10/18/2017 18:36:40'!
+!Notifier methodsFor: 'as yet unclassified' stamp: 'NH 10/19/2017 09:23:06'!
 notifyAllObservers: anState
-	observers do: [ :aVisitor |
-		anState accept: aVisitor ].! !
+	observers do: [ :anObserver |
+		anState accept: anObserver ].! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -1799,6 +1789,6 @@ notifyAllObservers: anState
 Notifier class
 	instanceVariableNames: ''!
 
-!Notifier class methodsFor: 'as yet unclassified' stamp: 'NH 10/18/2017 19:06:50'!
+!Notifier class methodsFor: 'as yet unclassified' stamp: 'NH 10/19/2017 09:22:25'!
 for: anElevator
-	^self new initializeWith: anElevator.! !
+	^ self new initializeFor: anElevator.! !
