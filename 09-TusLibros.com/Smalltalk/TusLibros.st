@@ -93,9 +93,9 @@ createCart
 createCashier
 	^Cashier newWithPriceCatalog: (self priceCatalog).! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 20:04:14'!
+!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/31/2017 18:47:41'!
 invalidCreditCard
-	^ CreditCard withNumber: 450000000 expiringOn:( FixedGregorianDate today previous: GregorianMonth twoMonths ).! !
+	^ CreditCard withNumber: 450000000 expiringOn:( GregorianMonthOfYear current previous: GregorianMonth twoMonths ).! !
 
 !StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/27/2017 13:46:05'!
 itemNotSoldByTheStore
@@ -126,9 +126,9 @@ setUp
 	validCreditCard _ self validCreditCard .
 	simulatedMerchantinterface _ SimulatedMerchant new.! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 20:04:53'!
+!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/31/2017 18:48:13'!
 validCreditCard
-	^CreditCard withNumber: 450000001 expiringOn:( FixedGregorianDate today next: GregorianMonth twoMonths ).
+	^CreditCard withNumber: 450000001 expiringOn:( GregorianMonthOfYear current next: GregorianMonth twoMonths ).
 	! !
 
 
