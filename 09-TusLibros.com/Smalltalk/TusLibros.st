@@ -12,9 +12,9 @@ clientRegister
 	register at: registeredClient put: registeredClientPassword.
 	^register! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:17:37'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 15:26:46'!
 createInterface
-	^ OnlineInterface newWithClientRegister: self clientRegister withPriceBook: factory priceBook.! !
+	^ OnlineInterface newWithClientRegister: self clientRegister withPriceBook: factory priceBook withMerchantProcessor: self.! !
 
 !OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 11:06:27'!
 setUp
@@ -67,9 +67,9 @@ test04CanAddBooksToCartThroughInterface
 		ofBook: aRegisteredBook.
 	self assert: ((interface listCart: aCartId) occurrencesOf: aRegisteredBook) = 20.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 13:02:38'!
-test05CheckoutCartThroughInterface
-	| aCartId aCard |
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:44:38'!
+test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
+	| aCartId ccn expirationDate transaction |
 	aCartId _ interface
 		createCartFor: registeredClient
 		withPassword: registeredClientPassword.
@@ -77,10 +77,11 @@ test05CheckoutCartThroughInterface
 		addToCart: aCartId
 		m1: 20
 		ofBook: aRegisteredBook.
-	aCard _ factory validCreditCard.
-	interface checkoutCart: aCartId  withCreditCardNumber: '' expiringOn: '' ownedBy: ''. 
+	ccn _ factory validCreditCardNumber.
+	expirationDate _ factory validCreditCardExpirationDate.
+	transaction _ interface checkoutCart: aCartId  withCreditCardNumber: ccn expiringOn: expirationDate ownedBy: registeredClient. 
 	
-	self assert: true.! !
+	self assert: ((interface listPurchasesOf: registeredClient withPassword: registeredClientPassword ) includes: transaction).! !
 
 
 !classDefinition: #StoreTest category: #TusLibros!
@@ -390,7 +391,7 @@ withNumber: aCreditCardNumber expiringOn: aDate
 
 !classDefinition: #OnlineInterface category: #TusLibros!
 Object subclass: #OnlineInterface
-	instanceVariableNames: 'clients editorialPriceBook carts'
+	instanceVariableNames: 'clients editorialPriceBook carts salesBook merchant'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
@@ -427,11 +428,13 @@ idFor: aCart
 	^'1'! !
 
 
-!OnlineInterface methodsFor: 'initialization' stamp: 'NH 11/3/2017 11:18:02'!
-initializeWith: aClientRegister withPriceBook: aPriceBook
+!OnlineInterface methodsFor: 'initialization' stamp: 'NH 11/5/2017 15:25:53'!
+initializeWith: aClientRegister withPriceBook: aPriceBook withMerchantProcessor: aMerchant
 	clients _ aClientRegister.
 	editorialPriceBook _ aPriceBook .
 	carts _ Dictionary new.
+	merchant _ aMerchant.
+	salesBook _ OrderedCollection new.
 	! !
 
 
@@ -443,15 +446,25 @@ clientNotFoundErrorDescription
 wrongPasswordErrorDescription
 	^'Client and Password do not match'! !
 
+
+!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 15:19:55'!
+checkoutCart: aCartId withCreditCardNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient 
+	| cart creditCard cashier |
+	self shouldBeImplemented.
+	cart _ carts at: aCartId.
+	creditCard _ CreditCard withNumber: aCreditCardNumber expiringOn: anExpirationDate.
+	cashier _ Cashier newWithPriceCatalog: editorialPriceBook withSalesBook: salesBook withMerchantProcessor: nil.
+	cashier checkout: cart withCreditCard: creditCard.! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'OnlineInterface class' category: #TusLibros!
 OnlineInterface class
 	instanceVariableNames: ''!
 
-!OnlineInterface class methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:02:26'!
-newWithClientRegister: aDictionary withPriceBook: aPriceBook
-	^ self new initializeWith: aDictionary withPriceBook: aPriceBook.! !
+!OnlineInterface class methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 15:25:13'!
+newWithClientRegister: aDictionary withPriceBook: aPriceBook withMerchantProcessor: aMerchant
+	^ self new initializeWith: aDictionary withPriceBook: aPriceBook withMerchantProcessor: aMerchant.! !
 
 
 !classDefinition: #TestObjectFactory category: #TusLibros!
@@ -503,7 +516,16 @@ priceBook
 salesBook
 	^OrderedCollection new.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:08:25'!
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:31:09'!
 validCreditCard
-	^CreditCard withNumber: 450000001 expiringOn:( GregorianMonthOfYear current next: GregorianMonth twoMonths ).
-	! !
+	^CreditCard 
+		withNumber: self validCreditCardNumber 
+		expiringOn: self validCreditCardExpirationDate.! !
+
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:29:32'!
+validCreditCardExpirationDate
+	^( GregorianMonthOfYear current next: GregorianMonth twoMonths ).! !
+
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:29:01'!
+validCreditCardNumber
+	^450000001! !
