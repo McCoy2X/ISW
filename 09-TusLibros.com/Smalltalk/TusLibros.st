@@ -67,10 +67,25 @@ test04CanAddBooksToCartThroughInterface
 		ofBook: aRegisteredBook.
 	self assert: ((interface listCart: aCartId) occurrencesOf: aRegisteredBook) = 20.! !
 
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 13:02:38'!
+test05CheckoutCartThroughInterface
+	| aCartId aCard |
+	aCartId _ interface
+		createCartFor: registeredClient
+		withPassword: registeredClientPassword.
+	interface
+		addToCart: aCartId
+		m1: 20
+		ofBook: aRegisteredBook.
+	aCard _ factory validCreditCard.
+	interface checkoutCart: aCartId  withCreditCardNumber: '' expiringOn: '' ownedBy: ''. 
+	
+	self assert: true.! !
+
 
 !classDefinition: #StoreTest category: #TusLibros!
 TestCase subclass: #StoreTest
-	instanceVariableNames: 'aCart aCashier invalidCreditCard validCreditCard simulatedMerchantinterface merchantBehaviour factory'
+	instanceVariableNames: 'aCart aCashier invalidCreditCard validCreditCard simulatedMerchantinterface merchantBehaviour factory salesBook'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
@@ -111,7 +126,7 @@ test05AgregarLibrosEsAcumulativo
 	3 timesRepeat: [ aCart addBook: aBook].
 	self assert: (aCart quantityOf: aBook) = 3.! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/2/2017 17:44:06'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:34:04'!
 test06CheckoutEmptyCartShouldFail
 	
 	self
@@ -119,9 +134,9 @@ test06CheckoutEmptyCartShouldFail
 		raise: Error
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Can not checkout an empty cart'.
-			self assert: aCashier isSalesBookEmpty ].! !
+			self assert: salesBook isEmpty ].! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/2/2017 18:54:08'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:34:44'!
 test07CheckoutWithExpiredCreditCardShouldFail
 	aCart addBook: self itemSoldByTheStore.
 	merchantBehaviour _ [:anAmount :aCreditCard | self fail].
@@ -133,9 +148,9 @@ test07CheckoutWithExpiredCreditCardShouldFail
 		raise: Error
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Can not checkout with expired credit card'.
-			self assert: aCashier isSalesBookEmpty ].! !
+			self assert: salesBook isEmpty ].! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/2/2017 19:21:12'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:35:08'!
 test08CheckoutaValidCartWithaValidCreditCard
 	| debitedFrom totalDebited |
 	aCart
@@ -148,11 +163,11 @@ test08CheckoutaValidCartWithaValidCreditCard
 		(aCashier
 			checkout: aCart
 			withCreditCard: validCreditCard) = (2000 * peso).
-	self assert: aCashier isSalesBookEmpty not.
+	self assert: salesBook isEmpty not.
 	self assert: totalDebited = (2000 * peso).
 	self assert: debitedFrom = validCreditCard.! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/2/2017 19:01:58'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:35:30'!
 test09CheckoutShouldFailWhenCreditCardOutOfFunds
 	aCart
 		add: 20
@@ -160,10 +175,10 @@ test09CheckoutShouldFailWhenCreditCardOutOfFunds
 	merchantBehaviour _ [:anAmount :aCreditCard | self error: self outOfFundsErrorDescription ].
 	self should: [aCashier checkout: aCart withCreditCard: validCreditCard]  raise:  Error - MessageNotUnderstood withExceptionDo: [:anException|
 		self assert: anException messageText = 'Credit card out of funds'.
-		self assert: aCashier isSalesBookEmpty].
+		self assert: salesBook isEmpty].
 		! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/2/2017 19:01:14'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:35:52'!
 test10CheckoutShouldFailWhenCreditCardStolen
 	aCart
 		add: 20
@@ -171,7 +186,7 @@ test10CheckoutShouldFailWhenCreditCardStolen
 	merchantBehaviour _ [:anAmount :aCreditCard | self error: self stolenCreditCardErrorDescription].
 	self should: [aCashier checkout: aCart withCreditCard: validCreditCard]  raise:  Error - MessageNotUnderstood withExceptionDo: [:anException|
 		self assert: anException messageText = 'Credit card stolen'.
-		self assert: aCashier isSalesBookEmpty].
+		self assert: salesBook isEmpty].
 		! !
 
 
@@ -214,11 +229,12 @@ priceBook
 		put: self itemSoldByTheStorePrice.
 	^ catalog.! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 12:28:00'!
+!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 09:32:50'!
 setUp
 	factory _ TestObjectFactory new.
 	aCart _ factory createCart.
-	aCashier _ factory createCashierWithMerchantProcessor: self.
+	salesBook _ factory salesBook.
+	aCashier _ factory createCashierWithMerchantProcessor: self withSalesBook: salesBook.
 	invalidCreditCard _ factory expiredCreditCard.
 	validCreditCard _ factory validCreditCard.
 	merchantBehaviour _ [:anAmount :aCreditCard | ].! !
@@ -320,19 +336,15 @@ initializeWithCatalog: aCatalog andMerchantProcessor: aMerchant
 	priceList _ aCatalog.
 	merchantProcessor _ aMerchant.! !
 
-!Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/4/2017 17:02:40'!
-initializeWithCatalog: aCatalog withSalesBook: anOrderedCollection andMerchantProcessor: aMerchant 
-	salesBook _ OrderedCollection new.
+!Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 09:46:20'!
+initializeWithCatalog: aCatalog withSalesBook: aSalesBook andMerchantProcessor: aMerchant 
+	salesBook _ aSalesBook.
 	priceList _ aCatalog.
 	merchantProcessor _ aMerchant.! !
 
 !Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 18:55:36'!
 invalidCreditCardErrorDescription
 	^'Can not checkout with expired credit card'.! !
-
-!Cashier methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 20:51:07'!
-isSalesBookEmpty
-	^salesBook isEmpty.! !
 
 !Cashier methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 20:09:05'!
 priceOf: anISBN
@@ -383,26 +395,13 @@ Object subclass: #OnlineInterface
 	poolDictionaries: ''
 	category: 'TusLibros'!
 
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 20:57:16'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 13:06:49'!
 addToCart: aCartId m1: amount ofBook: anISBN
 	| aCart |
-	aCart _ self cartFor: aCartId.
+	aCart _ carts at: aCartId.
 	aCart add: amount of: anISBN.! !
 
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 20:20:51'!
-authenticate: aClientId withPassword: aPassword.
-	(clients includesKey: aClientId) ifFalse: [ Error signal: self clientNotFoundErrorDescription ].
-	( (clients at: aClientId) = aPassword) ifFalse: [ Error signal: self wrongPasswordErrorDescription ].! !
-
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 11:17:07'!
-cartFor: aCartId
-	^ carts at: aCartId.! !
-
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 19:48:43'!
-clientNotFoundErrorDescription
-	^'Client not found'! !
-
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 11:34:19'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/3/2017 11:34:19'!
 createCartFor: aClientId withPassword: aPassword
 	| aCart cartId |
 	self authenticate: aClientId withPassword: aPassword.
@@ -411,28 +410,36 @@ createCartFor: aClientId withPassword: aPassword
 	carts at: cartId put: aCart .
 	^cartId! !
 
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 11:07:53'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 13:06:15'!
+listCart: aCartId 
+	| cart |
+	cart := carts at: aCartId. 
+	^cart contents.! !
+
+
+!OnlineInterface methodsFor: 'private' stamp: 'NH 11/2/2017 20:20:51'!
+authenticate: aClientId withPassword: aPassword.
+	(clients includesKey: aClientId) ifFalse: [ Error signal: self clientNotFoundErrorDescription ].
+	( (clients at: aClientId) = aPassword) ifFalse: [ Error signal: self wrongPasswordErrorDescription ].! !
+
+!OnlineInterface methodsFor: 'private' stamp: 'NH 11/3/2017 11:07:53'!
 idFor: aCart 
 	^'1'! !
 
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 19:59:31'!
-initializeWith: aClientRegister
-	clients _ aClientRegister.! !
 
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 11:18:02'!
+!OnlineInterface methodsFor: 'initialization' stamp: 'NH 11/3/2017 11:18:02'!
 initializeWith: aClientRegister withPriceBook: aPriceBook
 	clients _ aClientRegister.
 	editorialPriceBook _ aPriceBook .
 	carts _ Dictionary new.
 	! !
 
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 16:08:57'!
-listCart: aCartId 
-	| cart |
-	cart := self cartFor: aCartId. 
-	^cart contents.! !
 
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 20:10:57'!
+!OnlineInterface methodsFor: 'error descriptions' stamp: 'NH 11/2/2017 19:48:43'!
+clientNotFoundErrorDescription
+	^'Client not found'! !
+
+!OnlineInterface methodsFor: 'error descriptions' stamp: 'NH 11/2/2017 20:10:57'!
 wrongPasswordErrorDescription
 	^'Client and Password do not match'! !
 
@@ -441,10 +448,6 @@ wrongPasswordErrorDescription
 !classDefinition: 'OnlineInterface class' category: #TusLibros!
 OnlineInterface class
 	instanceVariableNames: ''!
-
-!OnlineInterface class methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 20:48:47'!
-newWithClientRegister: aDictionary
-	^ self new initializeWith: aDictionary.! !
 
 !OnlineInterface class methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:02:26'!
 newWithClientRegister: aDictionary withPriceBook: aPriceBook
@@ -462,11 +465,11 @@ Object subclass: #TestObjectFactory
 createCart
 	^ Cart withCatalog: self priceBook keys.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 14:54:49'!
-createCashierWithMerchantProcessor: aMerchant
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 09:30:57'!
+createCashierWithMerchantProcessor: aMerchant withSalesBook: aSalesBook
 	^ Cashier
 		newWithPriceCatalog: self priceBook
-		withSalesBook: self salesBook
+		withSalesBook: aSalesBook 
 		withMerchantProcessor: aMerchant.! !
 
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:08:38'!
