@@ -1,6 +1,6 @@
 !classDefinition: #OnlineInterfaceTest category: #TusLibros!
 TestCase subclass: #OnlineInterfaceTest
-	instanceVariableNames: 'interface nonRegisteredClient nonRegisteredClientPassword registeredClient registeredClientPassword aRegisteredBook factory priceCatalog'
+	instanceVariableNames: 'interface nonRegisteredClient nonRegisteredClientPassword registeredClient registeredClientPassword aRegisteredBook factory priceCatalog merchantBehaviour'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
@@ -16,14 +16,20 @@ clientRegister
 createInterface
 	^ OnlineInterface newWithClientRegister: self clientRegister withPriceBook: factory priceBook withMerchantProcessor: self.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 11:06:27'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:04:30'!
+debit: anAmountOfMoney from: aCreditCard 
+	merchantBehaviour value: anAmountOfMoney value: aCreditCard.! !
+
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:37:52'!
 setUp
 	factory _ TestObjectFactory new.
-	registeredClient _ 'PepeSanchez'.
+	registeredClient _ factory registeredClient.
 	registeredClientPassword _ 'cabildo45678'.
 	nonRegisteredClient _ 'easyBotnet23'.
 	nonRegisteredClientPassword _ '1234'.
+	aRegisteredBook _ factory itemSoldByTheStore.
 	interface _ self createInterface.
+	merchantBehaviour _ factory defaultMerchantBehaviour.
 
 ! !
 
@@ -67,7 +73,7 @@ test04CanAddBooksToCartThroughInterface
 		ofBook: aRegisteredBook.
 	self assert: ((interface listCart: aCartId) occurrencesOf: aRegisteredBook) = 20.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:44:38'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:19:54'!
 test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
 	| aCartId ccn expirationDate transaction |
 	aCartId _ interface
@@ -81,7 +87,7 @@ test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
 	expirationDate _ factory validCreditCardExpirationDate.
 	transaction _ interface checkoutCart: aCartId  withCreditCardNumber: ccn expiringOn: expirationDate ownedBy: registeredClient. 
 	
-	self assert: ((interface listPurchasesOf: registeredClient withPassword: registeredClientPassword ) includes: transaction).! !
+	self assert: ((interface listPurchasesOf: registeredClient withPassword: registeredClientPassword) includes: transaction).! !
 
 
 !classDefinition: #StoreTest category: #TusLibros!
@@ -199,11 +205,12 @@ createCart
 debit: aSimpleMeasure from: aCreditCard 
 	merchantBehaviour value: aSimpleMeasure value: aCreditCard.! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 18:34:36'!
+!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:33:11'!
 expiredCreditCard
 	^ CreditCard
 		withNumber: 450000000
-		expiringOn: (GregorianMonthOfYear current previous: GregorianMonth twoMonths).! !
+		expiringOn: (GregorianMonthOfYear current previous: GregorianMonth twoMonths)
+		ownedBy: self.! !
 
 !StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/27/2017 13:46:05'!
 itemNotSoldByTheStore
@@ -230,7 +237,7 @@ priceBook
 		put: self itemSoldByTheStorePrice.
 	^ catalog.! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 09:32:50'!
+!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:06:26'!
 setUp
 	factory _ TestObjectFactory new.
 	aCart _ factory createCart.
@@ -238,7 +245,7 @@ setUp
 	aCashier _ factory createCashierWithMerchantProcessor: self withSalesBook: salesBook.
 	invalidCreditCard _ factory expiredCreditCard.
 	validCreditCard _ factory validCreditCard.
-	merchantBehaviour _ [:anAmount :aCreditCard | ].! !
+	merchantBehaviour _ factory defaultMerchantBehaviour.! !
 
 !StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 19:01:33'!
 stolenCreditCardErrorDescription
@@ -307,7 +314,7 @@ Object subclass: #Cashier
 cartEmptyErrorDescription
 	^'Can not checkout an empty cart'! !
 
-!Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 18:55:16'!
+!Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:28:49'!
 checkout: aCart withCreditCard: aCreditCard
 	| total |
 	aCart isEmpty ifTrue: [ Error signal: self cartEmptyErrorDescription ].
@@ -319,23 +326,12 @@ checkout: aCart withCreditCard: aCreditCard
 	merchantProcessor
 		debit: total
 		from: aCreditCard.
-	salesBook add: aCart.
+	salesBook at: aCreditCard owner put: aCart.
 	^ total.! !
 
 !Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 18:58:30'!
 expiredCreditCardErrorDescription
 	^ 'Can not checkout with expired credit card'.! !
-
-!Cashier methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 20:09:05'!
-initializeWithCatalog: aCatalog
-	salesBook _ OrderedCollection new.
-	priceList _ aCatalog.! !
-
-!Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 17:43:07'!
-initializeWithCatalog: aCatalog andMerchantProcessor: aMerchant
-	salesBook _ OrderedCollection new.
-	priceList _ aCatalog.
-	merchantProcessor _ aMerchant.! !
 
 !Cashier methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 09:46:20'!
 initializeWithCatalog: aCatalog withSalesBook: aSalesBook andMerchantProcessor: aMerchant 
@@ -364,19 +360,24 @@ newWithPriceCatalog: aCatalog withSalesBook: aSalesBook withMerchantProcessor: a
 
 !classDefinition: #CreditCard category: #TusLibros!
 Object subclass: #CreditCard
-	instanceVariableNames: 'number expirationDate'
+	instanceVariableNames: 'number expirationDate owner'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
 
-!CreditCard methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 18:41:02'!
-initializeWithNumber: aCreditCardNumber andExpirationDate: aDate
+!CreditCard methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:30:26'!
+initializeWithNumber: aCreditCardNumber withExpirationDate: aDate withOwner: aClient
 	number _ aCreditCardNumber .
-	expirationDate _ aDate.! !
+	expirationDate _ aDate.
+	owner _ aClient.! !
 
 !CreditCard methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 19:46:00'!
 isInvalidAtDate: aDate
 	^expirationDate < aDate! !
+
+!CreditCard methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:29:18'!
+owner
+	^owner.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -384,9 +385,9 @@ isInvalidAtDate: aDate
 CreditCard class
 	instanceVariableNames: ''!
 
-!CreditCard class methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 18:38:32'!
-withNumber: aCreditCardNumber expiringOn: aDate
-	^self new initializeWithNumber: aCreditCardNumber andExpirationDate: aDate.! !
+!CreditCard class methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:31:36'!
+withNumber: aCreditCardNumber expiringOn: aDate ownedBy: aClient
+	^self new initializeWithNumber: aCreditCardNumber withExpirationDate: aDate withOwner: aClient.! !
 
 
 !classDefinition: #OnlineInterface category: #TusLibros!
@@ -401,6 +402,14 @@ addToCart: aCartId m1: amount ofBook: anISBN
 	| aCart |
 	aCart _ carts at: aCartId.
 	aCart add: amount of: anISBN.! !
+
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 17:32:27'!
+checkoutCart: aCartId withCreditCardNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient 
+	| cart creditCard cashier |
+	cart _ carts at: aCartId.
+	creditCard _ CreditCard withNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient .
+	cashier _ Cashier newWithPriceCatalog: editorialPriceBook withSalesBook: salesBook withMerchantProcessor: merchant.
+	cashier checkout: cart withCreditCard: creditCard.! !
 
 !OnlineInterface methodsFor: 'interface' stamp: 'NH 11/3/2017 11:34:19'!
 createCartFor: aClientId withPassword: aPassword
@@ -417,6 +426,11 @@ listCart: aCartId
 	cart := carts at: aCartId. 
 	^cart contents.! !
 
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 17:25:05'!
+listPurchasesOf: aClient withPassword: aPassword
+	self authenticate: aClient withPassword: aPassword.
+	^salesBook at: aClient ! !
+
 
 !OnlineInterface methodsFor: 'private' stamp: 'NH 11/2/2017 20:20:51'!
 authenticate: aClientId withPassword: aPassword.
@@ -428,13 +442,13 @@ idFor: aCart
 	^'1'! !
 
 
-!OnlineInterface methodsFor: 'initialization' stamp: 'NH 11/5/2017 15:25:53'!
+!OnlineInterface methodsFor: 'initialization' stamp: 'NH 11/5/2017 17:27:10'!
 initializeWith: aClientRegister withPriceBook: aPriceBook withMerchantProcessor: aMerchant
 	clients _ aClientRegister.
 	editorialPriceBook _ aPriceBook .
 	carts _ Dictionary new.
 	merchant _ aMerchant.
-	salesBook _ OrderedCollection new.
+	salesBook _ Dictionary new.
 	! !
 
 
@@ -445,16 +459,6 @@ clientNotFoundErrorDescription
 !OnlineInterface methodsFor: 'error descriptions' stamp: 'NH 11/2/2017 20:10:57'!
 wrongPasswordErrorDescription
 	^'Client and Password do not match'! !
-
-
-!OnlineInterface methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 15:19:55'!
-checkoutCart: aCartId withCreditCardNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient 
-	| cart creditCard cashier |
-	self shouldBeImplemented.
-	cart _ carts at: aCartId.
-	creditCard _ CreditCard withNumber: aCreditCardNumber expiringOn: anExpirationDate.
-	cashier _ Cashier newWithPriceCatalog: editorialPriceBook withSalesBook: salesBook withMerchantProcessor: nil.
-	cashier checkout: cart withCreditCard: creditCard.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -485,11 +489,16 @@ createCashierWithMerchantProcessor: aMerchant withSalesBook: aSalesBook
 		withSalesBook: aSalesBook 
 		withMerchantProcessor: aMerchant.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:08:38'!
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:07:19'!
+defaultMerchantBehaviour
+	^[:aMoneyAmount :aCreditCard | ]! !
+
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:34:48'!
 expiredCreditCard
 	^ CreditCard
 		withNumber: 450000000
-		expiringOn: (GregorianMonthOfYear current previous: GregorianMonth twoMonths).! !
+		expiringOn: (GregorianMonthOfYear current previous: GregorianMonth twoMonths)
+		ownedBy: self registeredClient.! !
 
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:09:10'!
 itemNotSoldByTheStore
@@ -512,15 +521,20 @@ priceBook
 		put: self itemSoldByTheStorePrice.
 	^ catalog.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/4/2017 16:59:57'!
-salesBook
-	^OrderedCollection new.! !
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:36:23'!
+registeredClient
+	^'PepeSanchez'.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:31:09'!
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:42:42'!
+salesBook
+	^Dictionary new.! !
+
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:35:14'!
 validCreditCard
 	^CreditCard 
 		withNumber: self validCreditCardNumber 
-		expiringOn: self validCreditCardExpirationDate.! !
+		expiringOn: self validCreditCardExpirationDate
+		ownedBy: self registeredClient.! !
 
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:29:32'!
 validCreditCardExpirationDate
