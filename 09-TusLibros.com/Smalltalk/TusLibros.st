@@ -1,6 +1,6 @@
 !classDefinition: #OnlineInterfaceTest category: #TusLibros!
 TestCase subclass: #OnlineInterfaceTest
-	instanceVariableNames: 'interface nonRegisteredClient nonRegisteredClientPassword registeredClient registeredClientPassword aRegisteredBook factory priceCatalog merchantBehaviour'
+	instanceVariableNames: 'interface nonRegisteredClient nonRegisteredClientPassword registeredClient registeredClientPassword aRegisteredBook factory priceCatalog merchantBehaviour timerIncrement'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
@@ -20,7 +20,21 @@ createInterface
 debit: anAmountOfMoney from: aCreditCard 
 	merchantBehaviour value: anAmountOfMoney value: aCreditCard.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:37:52'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:42:18'!
+expireTimer
+	
+	timerIncrement _ 30.! !
+
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:40:58'!
+minutesElapsedSinceStart
+	^ timerIncrement.! !
+
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:42:28'!
+restartTimer
+
+	timerIncrement _ 0.! !
+
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:40:43'!
 setUp
 	factory _ TestObjectFactory new.
 	registeredClient _ factory registeredClient.
@@ -30,55 +44,69 @@ setUp
 	aRegisteredBook _ factory itemSoldByTheStore.
 	interface _ self createInterface.
 	merchantBehaviour _ factory defaultMerchantBehaviour.
+	
+	timerIncrement _ 0.
 
 ! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 12:59:24'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:53:22'!
 test01CreatingCartForNonRegisteredClientFails
 	self
 		should: [
 			interface
 				createCartFor: nonRegisteredClient
-				withPassword: nonRegisteredClientPassword ]
+				withPassword: nonRegisteredClientPassword
+			
+				withTimer: self. ]
+				
 		raise: Error - MessageNotUnderstood
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Client not found' ].! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/3/2017 12:57:44'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:53:44'!
 test02CreatingCartFailsForRegisteredClientAndWrongPassword
 	self
 		should: [
 			interface
 				createCartFor: registeredClient
-				withPassword: nonRegisteredClientPassword ]
+				withPassword: nonRegisteredClientPassword
+				
+				withTimer: self ]
+			
 		raise: Error - MessageNotUnderstood
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Client and Password do not match' ].! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 20:26:36'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:54:04'!
 test03AuthenticatedClientCanCreateCart
 	| aCartId |
-	aCartId _ interface createCartFor: registeredClient withPassword: registeredClientPassword.
+	aCartId _ interface createCartFor: registeredClient withPassword: registeredClientPassword withTimer: self.
+	
 	self assert: ((interface listCart: aCartId) isEmpty).! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 19:33:02'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:54:23'!
 test04CanAddBooksToCartThroughInterface
 	| aCartId |
 	aCartId _ interface
 		createCartFor: registeredClient
-		withPassword: registeredClientPassword.
+		withPassword: registeredClientPassword
+		
+		withTimer: self.
+		
 	interface
 		addToCart: aCartId
 		anAmount: 20
 		ofBook: aRegisteredBook.
 	self assert: ((interface listCart: aCartId) occurrencesOf: aRegisteredBook) = 20.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 22:20:23'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:16:50'!
 test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
 	| aCartId ccn expirationDate transaction purchaseList |
 	aCartId _ interface
 		createCartFor: registeredClient
-		withPassword: registeredClientPassword.
+		withPassword: registeredClientPassword
+		
+		withTimer: self.
 	interface
 		addToCart: aCartId
 		anAmount: 20
@@ -91,6 +119,29 @@ test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
 	self assert: (purchaseList atWrap: 1 ) = (transaction atWrap: 1).
 	self assert: (purchaseList atWrap: 2 ) = (transaction atWrap: 2).
 	! !
+
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:41:53'!
+test06CartExpiresAfter30Minutes
+
+	| aCartId |
+	
+	aCartId _ interface
+		createCartFor: registeredClient
+		withPassword: registeredClientPassword
+		withTimer: self.
+	
+	self expireTimer.
+		
+	self should:
+			[interface
+			addToCart: aCartId
+			anAmount: 20
+			ofBook: aRegisteredBook.]
+		  raise: Error
+		  withExceptionDo:
+			[ :anException |
+				self assert: anException messageText = 'Cart has expired'.
+				self restartTimer]! !
 
 
 !classDefinition: #StoreTest category: #TusLibros!
@@ -413,22 +464,27 @@ withNumber: aCreditCardNumber expiringOn: aDate ownedBy: aClient
 
 !classDefinition: #OnlineInterface category: #TusLibros!
 Object subclass: #OnlineInterface
-	instanceVariableNames: 'clients editorialPriceBook carts salesBook merchant'
+	instanceVariableNames: 'clients editorialPriceBook carts salesBook merchant timer cartTimers'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
 
-!OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 19:32:43'!
+!OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 23:49:39'!
 addToCart: aCartId anAmount: amount ofBook: anISBN
 	| aCart |
+	self cartHasExpired: aCartId.
+
 	aCart _ carts at: aCartId.
 	aCart
 		add: amount
 		of: anISBN.! !
 
-!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 22:17:31'!
+!OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 23:49:57'!
 checkoutCart: aCartId withCreditCardNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient 
 	| cart creditCard cashier transactionTotal transactionItems |
+	
+	self cartHasExpired: aCartId.
+	
 	cart _ carts at: aCartId.
 	creditCard _ CreditCard withNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient .
 	cashier _ Cashier newWithPriceCatalog: editorialPriceBook withSalesBook: salesBook withMerchantProcessor: merchant.
@@ -437,13 +493,16 @@ checkoutCart: aCartId withCreditCardNumber: aCreditCardNumber expiringOn: anExpi
 	cart itemsDo: [:book | transactionItems add: book withOccurrences: 1].
 	^{transactionTotal. transactionItems}! !
 
-!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/3/2017 11:34:19'!
-createCartFor: aClientId withPassword: aPassword
+!OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 23:45:24'!
+createCartFor: aClientId withPassword: aPassword withTimer: aTimer
+
 	| aCart cartId |
 	self authenticate: aClientId withPassword: aPassword.
 	aCart _ Cart withCatalog: editorialPriceBook keys.
 	cartId _ self idFor: aCart.
 	carts at: cartId put: aCart .
+	cartTimers at: cartId put: aTimer.
+
 	^cartId! !
 
 !OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 19:24:51'!
@@ -479,20 +538,34 @@ authenticate: aClientId withPassword: aPassword.
 	(clients includesKey: aClientId) ifFalse: [ Error signal: self clientNotFoundErrorDescription ].
 	( (clients at: aClientId) = aPassword) ifFalse: [ Error signal: self wrongPasswordErrorDescription ].! !
 
+!OnlineInterface methodsFor: 'private' stamp: 'ISW 11/6/2017 00:47:36'!
+cartHasExpired: aCart
+
+	| cartTimer |
+	cartTimer := cartTimers at: aCart.
+	
+	(cartTimer minutesElapsedSinceStart >= 30) ifTrue: [Error signal: self cartHasExpired].! !
+
 !OnlineInterface methodsFor: 'private' stamp: 'NH 11/3/2017 11:07:53'!
 idFor: aCart 
 	^'1'! !
 
 
-!OnlineInterface methodsFor: 'initialization' stamp: 'NH 11/5/2017 17:27:10'!
+!OnlineInterface methodsFor: 'initialization' stamp: 'ISW 11/5/2017 23:44:06'!
 initializeWith: aClientRegister withPriceBook: aPriceBook withMerchantProcessor: aMerchant
+
 	clients _ aClientRegister.
 	editorialPriceBook _ aPriceBook .
 	carts _ Dictionary new.
 	merchant _ aMerchant.
-	salesBook _ Dictionary new.
-	! !
+	salesBook _ Dictionary new.	
+	cartTimers _ Dictionary new.! !
 
+
+!OnlineInterface methodsFor: 'error descriptions' stamp: 'ISW 11/6/2017 00:39:08'!
+cartHasExpired
+
+	^'Cart has expired'! !
 
 !OnlineInterface methodsFor: 'error descriptions' stamp: 'NH 11/2/2017 19:48:43'!
 clientNotFoundErrorDescription
@@ -561,6 +634,10 @@ itemSoldByTheStore
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:08:01'!
 itemSoldByTheStorePrice
 	^100*peso! !
+
+!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:59:31'!
+minutesElapsedSinceStart
+	^ 30.! !
 
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:18:37'!
 priceBook
