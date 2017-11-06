@@ -73,9 +73,9 @@ test04CanAddBooksToCartThroughInterface
 		ofBook: aRegisteredBook.
 	self assert: ((interface listCart: aCartId) occurrencesOf: aRegisteredBook) = 20.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 19:33:19'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 22:20:23'!
 test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
-	| aCartId ccn expirationDate transaction |
+	| aCartId ccn expirationDate transaction purchaseList |
 	aCartId _ interface
 		createCartFor: registeredClient
 		withPassword: registeredClientPassword.
@@ -87,7 +87,10 @@ test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
 	expirationDate _ factory validCreditCardExpirationDate.
 	transaction _ interface checkoutCart: aCartId  withCreditCardNumber: ccn expiringOn: expirationDate ownedBy: registeredClient. 
 	
-	self assert: ((interface listPurchasesOf: registeredClient withPassword: registeredClientPassword) includes: transaction).! !
+	purchaseList _ (interface listPurchasesOf: registeredClient withPassword: registeredClientPassword).
+	self assert: (purchaseList atWrap: 1 ) = (transaction atWrap: 1).
+	self assert: (purchaseList atWrap: 2 ) = (transaction atWrap: 2).
+	! !
 
 
 !classDefinition: #StoreTest category: #TusLibros!
@@ -338,19 +341,24 @@ initializeWithCatalog: aCatalog withSalesBook: aSalesBook andMerchantProcessor: 
 	merchantProcessor _ aMerchant.! !
 
 
-!Cashier methodsFor: 'checkout' stamp: 'ISW 11/5/2017 19:58:57'!
+!Cashier methodsFor: 'checkout' stamp: 'NH 11/5/2017 21:15:45'!
 checkout: aCart withCreditCard: aCreditCard
 	| total |
+	
 	aCart isEmpty ifTrue: [ Error signal: self cartEmptyErrorDescription ].
 	(aCreditCard isInvalidAtDate: GregorianMonthOfYear current) ifTrue: [ Error signal: self expiredCreditCardErrorDescription ].
 	total _ 0.
-	
-	aCart itemsDo: [ :book | total _ total + (self priceOf: book) ].
-	
+	aCart itemsDo: [ :book |
+		total _ total + (self priceOf: book) ].
 	merchantProcessor
 		debit: total
 		from: aCreditCard.
-	salesBook at: aCreditCard owner put: aCart.
+	(salesBook
+		at: aCreditCard owner
+		ifAbsent: [
+			salesBook
+				at: aCreditCard owner
+				put: OrderedCollection new ]) add: aCart.
 	^ total.! !
 
 
@@ -418,13 +426,16 @@ addToCart: aCartId anAmount: amount ofBook: anISBN
 		add: amount
 		of: anISBN.! !
 
-!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 17:32:27'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 22:17:31'!
 checkoutCart: aCartId withCreditCardNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient 
-	| cart creditCard cashier |
+	| cart creditCard cashier transactionTotal transactionItems |
 	cart _ carts at: aCartId.
 	creditCard _ CreditCard withNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient .
 	cashier _ Cashier newWithPriceCatalog: editorialPriceBook withSalesBook: salesBook withMerchantProcessor: merchant.
-	cashier checkout: cart withCreditCard: creditCard.! !
+	transactionTotal _ cashier checkout: cart withCreditCard: creditCard.
+	transactionItems _ Bag new.
+	cart itemsDo: [:book | transactionItems add: book withOccurrences: 1].
+	^{transactionTotal. transactionItems}! !
 
 !OnlineInterface methodsFor: 'interface' stamp: 'NH 11/3/2017 11:34:19'!
 createCartFor: aClientId withPassword: aPassword
@@ -438,17 +449,29 @@ createCartFor: aClientId withPassword: aPassword
 !OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 19:24:51'!
 listCart: aCartId 
 	| cart contents |
-	cart := carts at: aCartId. 	
+	cart := carts at: aCartId. 	
 	contents := Bag new.
 	
 	cart itemsDo: [ :book | contents add: book ].
 	
 	^contents.! !
 
-!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 17:25:05'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 22:25:07'!
 listPurchasesOf: aClient withPassword: aPassword
-	self authenticate: aClient withPassword: aPassword.
-	^salesBook at: aClient ! !
+	| transactions total itemBag |
+	self
+		authenticate: aClient
+		withPassword: aPassword.
+	transactions _ salesBook at: aClient.
+	"en teoria combinamos todos los carts y devolvemos un total?"
+	"How to devolver 2 cosas en smalltalk"
+	total _ transactions inject: 0 into: [:acum :cart  |
+		 |acum2| acum2 _ 0.
+		 cart itemsDo: [:book | acum2 _ acum2 + (editorialPriceBook at: book) ].
+		acum + acum2].
+	itemBag _ transactions inject: Bag new into: [:items :cart  | cart itemsDo: [:book | items add: book withOccurrences: 1]].
+	^{total. itemBag}
+	! !
 
 
 !OnlineInterface methodsFor: 'private' stamp: 'NH 11/2/2017 20:20:51'!
@@ -488,6 +511,14 @@ OnlineInterface class
 !OnlineInterface class methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 15:25:13'!
 newWithClientRegister: aDictionary withPriceBook: aPriceBook withMerchantProcessor: aMerchant
 	^ self new initializeWith: aDictionary withPriceBook: aPriceBook withMerchantProcessor: aMerchant.! !
+
+
+!classDefinition: #PurchaseList category: #TusLibros!
+Object subclass: #PurchaseList
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'TusLibros'!
 
 
 !classDefinition: #TestObjectFactory category: #TusLibros!
