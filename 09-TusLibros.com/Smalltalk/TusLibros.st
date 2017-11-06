@@ -1,9 +1,26 @@
 !classDefinition: #OnlineInterfaceTest category: #TusLibros!
 TestCase subclass: #OnlineInterfaceTest
-	instanceVariableNames: 'interface nonRegisteredClient nonRegisteredClientPassword registeredClient registeredClientPassword aRegisteredBook factory priceCatalog merchantBehaviour timerIncrement'
+	instanceVariableNames: 'interface nonRegisteredClient nonRegisteredClientPassword registeredClient registeredClientPassword aRegisteredBook factory priceCatalog merchantBehaviour timerMinutes'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
+
+!OnlineInterfaceTest methodsFor: 'timer stub' stamp: 'NH 11/6/2017 13:03:03'!
+expireTimer
+	timerMinutes _ 30.! !
+
+!OnlineInterfaceTest methodsFor: 'timer stub' stamp: 'NH 11/6/2017 13:03:03'!
+fifteenMinutesElapsed
+	timerMinutes _ 15.! !
+
+!OnlineInterfaceTest methodsFor: 'timer stub' stamp: 'NH 11/6/2017 13:03:03'!
+minutesElapsedSinceStart
+	^ timerMinutes.! !
+
+!OnlineInterfaceTest methodsFor: 'timer stub' stamp: 'NH 11/6/2017 13:03:03'!
+restartTimer
+	timerMinutes _ 0.! !
+
 
 !OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 20:01:45'!
 clientRegister
@@ -20,21 +37,7 @@ createInterface
 debit: anAmountOfMoney from: aCreditCard 
 	merchantBehaviour value: anAmountOfMoney value: aCreditCard.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:42:18'!
-expireTimer
-	
-	timerIncrement _ 30.! !
-
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:40:58'!
-minutesElapsedSinceStart
-	^ timerIncrement.! !
-
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:42:28'!
-restartTimer
-
-	timerIncrement _ 0.! !
-
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:40:43'!
+!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'NH 11/6/2017 13:03:03'!
 setUp
 	factory _ TestObjectFactory new.
 	registeredClient _ factory registeredClient.
@@ -44,12 +47,10 @@ setUp
 	aRegisteredBook _ factory itemSoldByTheStore.
 	interface _ self createInterface.
 	merchantBehaviour _ factory defaultMerchantBehaviour.
-	
-	timerIncrement _ 0.
+	timerMinutes _ 0.! !
 
-! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:53:22'!
+!OnlineInterfaceTest methodsFor: 'testing' stamp: 'ISW 11/5/2017 23:53:22'!
 test01CreatingCartForNonRegisteredClientFails
 	self
 		should: [
@@ -63,7 +64,7 @@ test01CreatingCartForNonRegisteredClientFails
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Client not found' ].! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:53:44'!
+!OnlineInterfaceTest methodsFor: 'testing' stamp: 'ISW 11/5/2017 23:53:44'!
 test02CreatingCartFailsForRegisteredClientAndWrongPassword
 	self
 		should: [
@@ -77,14 +78,14 @@ test02CreatingCartFailsForRegisteredClientAndWrongPassword
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Client and Password do not match' ].! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:54:04'!
+!OnlineInterfaceTest methodsFor: 'testing' stamp: 'ISW 11/5/2017 23:54:04'!
 test03AuthenticatedClientCanCreateCart
 	| aCartId |
 	aCartId _ interface createCartFor: registeredClient withPassword: registeredClientPassword withTimer: self.
 	
 	self assert: ((interface listCart: aCartId) isEmpty).! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:54:23'!
+!OnlineInterfaceTest methodsFor: 'testing' stamp: 'ISW 11/5/2017 23:54:23'!
 test04CanAddBooksToCartThroughInterface
 	| aCartId |
 	aCartId _ interface
@@ -99,13 +100,12 @@ test04CanAddBooksToCartThroughInterface
 		ofBook: aRegisteredBook.
 	self assert: ((interface listCart: aCartId) occurrencesOf: aRegisteredBook) = 20.! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:16:50'!
+!OnlineInterfaceTest methodsFor: 'testing' stamp: 'NH 11/6/2017 12:10:55'!
 test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
 	| aCartId ccn expirationDate transaction purchaseList |
 	aCartId _ interface
 		createCartFor: registeredClient
 		withPassword: registeredClientPassword
-		
 		withTimer: self.
 	interface
 		addToCart: aCartId
@@ -113,14 +113,13 @@ test05CheckoutCartThroughInterfaceShouldBeRegisteredOnSalesBook
 		ofBook: aRegisteredBook.
 	ccn _ factory validCreditCardNumber.
 	expirationDate _ factory validCreditCardExpirationDate.
-	transaction _ interface checkoutCart: aCartId  withCreditCardNumber: ccn expiringOn: expirationDate ownedBy: registeredClient. 
-	
+	transaction _ interface checkoutCart: aCartId  withCreditCardNumber: ccn expiringOn: expirationDate ownedBy: registeredClient. 	
 	purchaseList _ (interface listPurchasesOf: registeredClient withPassword: registeredClientPassword).
 	self assert: (purchaseList atWrap: 1 ) = (transaction atWrap: 1).
 	self assert: (purchaseList atWrap: 2 ) = (transaction atWrap: 2).
 	! !
 
-!OnlineInterfaceTest methodsFor: 'as yet unclassified' stamp: 'ISW 11/6/2017 00:41:53'!
+!OnlineInterfaceTest methodsFor: 'testing' stamp: 'NH 11/6/2017 11:02:10'!
 test06CartExpiresAfter30Minutes
 
 	| aCartId |
@@ -141,12 +140,26 @@ test06CartExpiresAfter30Minutes
 		  withExceptionDo:
 			[ :anException |
 				self assert: anException messageText = 'Cart has expired'.
-				self restartTimer]! !
+				self assert: (interface listCart: aCartId) isEmpty].! !
+
+!OnlineInterfaceTest methodsFor: 'testing' stamp: 'NH 11/6/2017 11:23:14'!
+test07CartTimerGetsResetAfterSuccessfulOperation
+	| aCartId |
+	aCartId _ interface
+		createCartFor: registeredClient
+		withPassword: registeredClientPassword
+		withTimer: self.
+	self fifteenMinutesElapsed.
+	interface
+		addToCart: aCartId
+		anAmount: 20
+		ofBook: aRegisteredBook.
+	self assert: (self minutesElapsedSinceStart = 0).! !
 
 
 !classDefinition: #StoreTest category: #TusLibros!
 TestCase subclass: #StoreTest
-	instanceVariableNames: 'aCart aCashier invalidCreditCard validCreditCard simulatedMerchantinterface merchantBehaviour factory salesBook'
+	instanceVariableNames: 'aCart aCashier invalidCreditCard validCreditCard simulatedMerchantinterface merchantBehaviour factory salesBook anotherCart registeredClient'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
@@ -155,17 +168,17 @@ TestCase subclass: #StoreTest
 test01CarritoComienzaVacio
 	self assert: aCart isEmpty.! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 10/30/2017 20:46:45'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 10:54:20'!
 test02CarritoNoVacioCuandoSeAgregaLibro
 	
-	aCart addBook: self itemSoldByTheStore.
+	aCart addBook: factory itemSoldByTheStore.
 	self deny: aCart isEmpty.! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 10/30/2017 20:47:10'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 10:55:31'!
 test03NoSePuedeAgregarAlCarritoLibroQueNoEsDeEditorial
 	
 	self
-		should: [ aCart addBook: self itemNotSoldByTheStore ]
+		should: [ aCart addBook: factory itemNotSoldByTheStore ]
 		raise: Error
 		withExceptionDo: [ :exception |
 			self assert: exception messageText = 'ISBN not in catalog'.
@@ -187,128 +200,127 @@ test05AgregarLibrosEsAcumulativo
 	3 timesRepeat: [ aCart addBook: aBook].
 	self assert: (aCart quantityOf: aBook) = 3.! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:34:04'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 12:58:26'!
 test06CheckoutEmptyCartShouldFail
 	
 	self
-		should: [ aCashier checkout: aCart withCreditCard: validCreditCard]
+		should: [ aCashier checkout: aCart withCreditCard: validCreditCard forClient: registeredClient]
 		raise: Error
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Can not checkout an empty cart'.
 			self assert: salesBook isEmpty ].! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:34:44'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 12:58:44'!
 test07CheckoutWithExpiredCreditCardShouldFail
-	aCart addBook: self itemSoldByTheStore.
+	aCart addBook: factory itemSoldByTheStore.
 	merchantBehaviour _ [:anAmount :aCreditCard | self fail].
 	self
 		should: [
 			aCashier
 				checkout: aCart
-				withCreditCard: invalidCreditCard ]
+				withCreditCard: invalidCreditCard
+				forClient: registeredClient ]
 		raise: Error
 		withExceptionDo: [ :anException |
 			self assert: anException messageText = 'Can not checkout with expired credit card'.
 			self assert: salesBook isEmpty ].! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:35:08'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 12:59:05'!
 test08CheckoutaValidCartWithaValidCreditCard
 	| debitedFrom totalDebited |
 	aCart
 		add: 20
-		of: self itemSoldByTheStore.
+		of: factory itemSoldByTheStore.
 	merchantBehaviour _ [ :anAmount :aCreditCard |
 	totalDebited _ anAmount.
 	debitedFrom _ aCreditCard ].
 	self assert:
 		(aCashier
 			checkout: aCart
-			withCreditCard: validCreditCard) = (2000 * peso).
+			withCreditCard: validCreditCard
+			forClient: registeredClient ) = (2000 * peso).
 	self assert: salesBook isEmpty not.
+	self assert: ((salesBook at: factory registeredClient ) includes: aCart).
 	self assert: totalDebited = (2000 * peso).
 	self assert: debitedFrom = validCreditCard.! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:35:30'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 12:59:37'!
 test09CheckoutShouldFailWhenCreditCardOutOfFunds
 	aCart
 		add: 20
-		of: self itemSoldByTheStore.
+		of: factory itemSoldByTheStore.
 	merchantBehaviour _ [:anAmount :aCreditCard | self error: self outOfFundsErrorDescription ].
-	self should: [aCashier checkout: aCart withCreditCard: validCreditCard]  raise:  Error - MessageNotUnderstood withExceptionDo: [:anException|
+	self should: [aCashier checkout: aCart withCreditCard: validCreditCard forClient: registeredClient ]  raise:  Error - MessageNotUnderstood withExceptionDo: [:anException|
 		self assert: anException messageText = 'Credit card out of funds'.
 		self assert: salesBook isEmpty].
 		! !
 
-!StoreTest methodsFor: 'Testing' stamp: 'NH 11/5/2017 09:35:52'!
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 12:59:54'!
 test10CheckoutShouldFailWhenCreditCardStolen
 	aCart
 		add: 20
-		of: self itemSoldByTheStore.
+		of: factory itemSoldByTheStore.
 	merchantBehaviour _ [:anAmount :aCreditCard | self error: self stolenCreditCardErrorDescription].
-	self should: [aCashier checkout: aCart withCreditCard: validCreditCard]  raise:  Error - MessageNotUnderstood withExceptionDo: [:anException|
+	self should: [aCashier checkout: aCart withCreditCard: validCreditCard forClient: registeredClient ]  raise:  Error - MessageNotUnderstood withExceptionDo: [:anException|
 		self assert: anException messageText = 'Credit card stolen'.
 		self assert: salesBook isEmpty].
 		! !
 
+!StoreTest methodsFor: 'Testing' stamp: 'NH 11/6/2017 13:01:39'!
+test11CheckoutCartsWithaCreditCardButDifferentClients
+	| debitedFrom totalDebited |
+	totalDebited _ 0.
+	aCart
+		add: 20
+		of: factory itemSoldByTheStore.
+	anotherCart
+		add: 40
+		of: factory itemSoldByTheStore.
+	merchantBehaviour _ [ :anAmount :aCreditCard |
+	totalDebited _ totalDebited + anAmount.
+	debitedFrom _ aCreditCard ].
+	self assert:
+		(aCashier
+			checkout: aCart
+			withCreditCard: validCreditCard
+			forClient: registeredClient) = (2000 * peso).
+	self assert:
+		(aCashier
+			checkout: anotherCart
+			withCreditCard: validCreditCard
+			forClient: factory anotherRegisteredClient) = (4000 * peso).
+	self assert: salesBook isEmpty not.
+	self assert: ((salesBook at: factory registeredClient) includes: aCart).
+	self assert: ((salesBook at: factory anotherRegisteredClient) includes: anotherCart).
+	self assert: totalDebited = (6000 * peso).
+	self assert: debitedFrom = validCreditCard.! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:18:37'!
-createCart
-	^ Cart withCatalog: self priceBook keys.! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 18:43:22'!
-debit: aSimpleMeasure from: aCreditCard 
-	merchantBehaviour value: aSimpleMeasure value: aCreditCard.! !
-
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:33:11'!
-expiredCreditCard
-	^ CreditCard
-		withNumber: 450000000
-		expiringOn: (GregorianMonthOfYear current previous: GregorianMonth twoMonths)
-		ownedBy: self.! !
-
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/27/2017 13:46:05'!
-itemNotSoldByTheStore
-	^'The Community Of The Ring'! !
-
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 20:43:39'!
-itemSoldByTheStore
-	^ 'A Song Of Ice And Fire'.! !
-
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/30/2017 20:43:12'!
-itemSoldByTheStorePrice
-	^100*peso! !
-
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 18:48:56'!
+!StoreTest methodsFor: 'error descriptions' stamp: 'NH 11/2/2017 18:48:56'!
 outOfFundsErrorDescription
 	^'Credit card out of funds'! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:18:37'!
-priceBook
-	| catalog |
-	catalog _ Dictionary new.
-	catalog
-		at: self itemSoldByTheStore
-		put: self itemSoldByTheStorePrice.
-	^ catalog.! !
+!StoreTest methodsFor: 'error descriptions' stamp: 'NH 11/2/2017 19:01:33'!
+stolenCreditCardErrorDescription
+	^'Credit card stolen'! !
 
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:06:26'!
+
+!StoreTest methodsFor: 'merchant stub' stamp: 'NH 11/2/2017 18:43:22'!
+debit: aSimpleMeasure from: aCreditCard 
+	merchantBehaviour value: aSimpleMeasure value: aCreditCard.! !
+
+
+!StoreTest methodsFor: 'set up' stamp: 'NH 11/6/2017 13:01:22'!
 setUp
 	factory _ TestObjectFactory new.
 	aCart _ factory createCart.
+	anotherCart _ factory createCart.
 	salesBook _ factory salesBook.
 	aCashier _ factory createCashierWithMerchantProcessor: self withSalesBook: salesBook.
 	invalidCreditCard _ factory expiredCreditCard.
 	validCreditCard _ factory validCreditCard.
-	merchantBehaviour _ factory defaultMerchantBehaviour.! !
-
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 19:01:33'!
-stolenCreditCardErrorDescription
-	^'Credit card stolen'! !
-
-!StoreTest methodsFor: 'as yet unclassified' stamp: 'NH 10/31/2017 18:48:13'!
-validCreditCard
-	^CreditCard withNumber: 450000001 expiringOn:( GregorianMonthOfYear current next: GregorianMonth twoMonths ).
-	! !
+	merchantBehaviour _ factory defaultMerchantBehaviour.
+	registeredClient _ factory registeredClient.! !
 
 
 !classDefinition: #Cart category: #TusLibros!
@@ -392,8 +404,8 @@ initializeWithCatalog: aCatalog withSalesBook: aSalesBook andMerchantProcessor: 
 	merchantProcessor _ aMerchant.! !
 
 
-!Cashier methodsFor: 'checkout' stamp: 'NH 11/5/2017 21:15:45'!
-checkout: aCart withCreditCard: aCreditCard
+!Cashier methodsFor: 'checkout' stamp: 'NH 11/6/2017 12:42:34'!
+checkout: aCart withCreditCard: aCreditCard forClient: aClient 
 	| total |
 	
 	aCart isEmpty ifTrue: [ Error signal: self cartEmptyErrorDescription ].
@@ -405,15 +417,15 @@ checkout: aCart withCreditCard: aCreditCard
 		debit: total
 		from: aCreditCard.
 	(salesBook
-		at: aCreditCard owner
+		at: aClient
 		ifAbsent: [
 			salesBook
-				at: aCreditCard owner
+				at: aClient
 				put: OrderedCollection new ]) add: aCart.
 	^ total.! !
 
 
-!Cashier methodsFor: 'enumerating' stamp: 'NH 10/30/2017 20:09:05'!
+!Cashier methodsFor: 'pricing' stamp: 'NH 10/30/2017 20:09:05'!
 priceOf: anISBN
 	^ priceList at: anISBN.! !
 
@@ -430,26 +442,21 @@ newWithPriceCatalog: aCatalog withSalesBook: aSalesBook withMerchantProcessor: a
 
 !classDefinition: #CreditCard category: #TusLibros!
 Object subclass: #CreditCard
-	instanceVariableNames: 'number expirationDate owner'
+	instanceVariableNames: 'number expirationDate'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
 
-!CreditCard methodsFor: 'initialization' stamp: 'NH 11/5/2017 17:30:26'!
-initializeWithNumber: aCreditCardNumber withExpirationDate: aDate withOwner: aClient
+!CreditCard methodsFor: 'initialization' stamp: 'NH 11/6/2017 13:13:27'!
+initializeWithNumber: aCreditCardNumber withExpirationDate: aDate
 	number _ aCreditCardNumber .
 	expirationDate _ aDate.
-	owner _ aClient.! !
+! !
 
 
 !CreditCard methodsFor: 'testing' stamp: 'NH 10/30/2017 19:46:00'!
 isInvalidAtDate: aDate
 	^expirationDate < aDate! !
-
-
-!CreditCard methodsFor: 'inspecting' stamp: 'NH 11/5/2017 17:29:18'!
-owner
-	^owner.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -457,19 +464,19 @@ owner
 CreditCard class
 	instanceVariableNames: ''!
 
-!CreditCard class methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:31:36'!
-withNumber: aCreditCardNumber expiringOn: aDate ownedBy: aClient
-	^self new initializeWithNumber: aCreditCardNumber withExpirationDate: aDate withOwner: aClient.! !
+!CreditCard class methodsFor: 'as yet unclassified' stamp: 'NH 11/6/2017 13:13:49'!
+withNumber: aCreditCardNumber expiringOn: aDate
+	^self new initializeWithNumber: aCreditCardNumber withExpirationDate: aDate.! !
 
 
 !classDefinition: #OnlineInterface category: #TusLibros!
 Object subclass: #OnlineInterface
-	instanceVariableNames: 'clients editorialPriceBook carts salesBook merchant timer cartTimers'
+	instanceVariableNames: 'clients editorialPriceBook carts salesBook merchant timer cartTimers random'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
 
-!OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 23:49:39'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/6/2017 11:27:15'!
 addToCart: aCartId anAmount: amount ofBook: anISBN
 	| aCart |
 	self cartHasExpired: aCartId.
@@ -477,20 +484,22 @@ addToCart: aCartId anAmount: amount ofBook: anISBN
 	aCart _ carts at: aCartId.
 	aCart
 		add: amount
-		of: anISBN.! !
+		of: anISBN.
+	self restartCartTimer: aCartId.! !
 
-!OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 23:49:57'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/6/2017 13:14:19'!
 checkoutCart: aCartId withCreditCardNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient 
 	| cart creditCard cashier transactionTotal transactionItems |
 	
 	self cartHasExpired: aCartId.
 	
 	cart _ carts at: aCartId.
-	creditCard _ CreditCard withNumber: aCreditCardNumber expiringOn: anExpirationDate ownedBy: aClient .
+	creditCard _ CreditCard withNumber: aCreditCardNumber expiringOn: anExpirationDate.
 	cashier _ Cashier newWithPriceCatalog: editorialPriceBook withSalesBook: salesBook withMerchantProcessor: merchant.
-	transactionTotal _ cashier checkout: cart withCreditCard: creditCard.
+	transactionTotal _ cashier checkout: cart withCreditCard: creditCard forClient: aClient.
 	transactionItems _ Bag new.
 	cart itemsDo: [:book | transactionItems add: book withOccurrences: 1].
+	self restartCartTimer: aCartId.
 	^{transactionTotal. transactionItems}! !
 
 !OnlineInterface methodsFor: 'interface' stamp: 'ISW 11/5/2017 23:45:24'!
@@ -515,22 +524,28 @@ listCart: aCartId
 	
 	^contents.! !
 
-!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/5/2017 22:25:07'!
+!OnlineInterface methodsFor: 'interface' stamp: 'NH 11/6/2017 12:17:18'!
 listPurchasesOf: aClient withPassword: aPassword
 	| transactions total itemBag |
 	self
 		authenticate: aClient
 		withPassword: aPassword.
 	transactions _ salesBook at: aClient.
-	"en teoria combinamos todos los carts y devolvemos un total?"
-	"How to devolver 2 cosas en smalltalk"
-	total _ transactions inject: 0 into: [:acum :cart  |
-		 |acum2| acum2 _ 0.
-		 cart itemsDo: [:book | acum2 _ acum2 + (editorialPriceBook at: book) ].
-		acum + acum2].
-	itemBag _ transactions inject: Bag new into: [:items :cart  | cart itemsDo: [:book | items add: book withOccurrences: 1]].
-	^{total. itemBag}
-	! !
+	total _ transactions
+		inject: 0
+		into: [ :clientTotal :cart | | cartTotal |
+			cartTotal _ 0.
+			cart itemsDo: [ :book |
+				cartTotal _ cartTotal + (editorialPriceBook at: book) ].
+			clientTotal + cartTotal ].
+	itemBag _ transactions
+		inject: Bag new
+		into: [ :items :cart |
+			cart itemsDo: [ :book |
+				items
+					add: book
+					withOccurrences: 1 ]].
+	^ {total. itemBag}.! !
 
 
 !OnlineInterface methodsFor: 'private' stamp: 'NH 11/2/2017 20:20:51'!
@@ -546,20 +561,25 @@ cartHasExpired: aCart
 	
 	(cartTimer minutesElapsedSinceStart >= 30) ifTrue: [Error signal: self cartHasExpired].! !
 
-!OnlineInterface methodsFor: 'private' stamp: 'NH 11/3/2017 11:07:53'!
+!OnlineInterface methodsFor: 'private' stamp: 'NH 11/6/2017 12:04:41'!
 idFor: aCart 
-	^'1'! !
+	^(random next* SmallInteger maxVal) rounded. ! !
+
+!OnlineInterface methodsFor: 'private' stamp: 'NH 11/6/2017 12:07:37'!
+restartCartTimer: aCartId 
+	(cartTimers at: aCartId) restartTimer.! !
 
 
-!OnlineInterface methodsFor: 'initialization' stamp: 'ISW 11/5/2017 23:44:06'!
+!OnlineInterface methodsFor: 'initialization' stamp: 'NH 11/6/2017 12:05:06'!
 initializeWith: aClientRegister withPriceBook: aPriceBook withMerchantProcessor: aMerchant
 
 	clients _ aClientRegister.
 	editorialPriceBook _ aPriceBook .
 	carts _ Dictionary new.
 	merchant _ aMerchant.
-	salesBook _ Dictionary new.	
-	cartTimers _ Dictionary new.! !
+	salesBook _ Dictionary new.	
+	cartTimers _ Dictionary new.
+	random _ Random new.! !
 
 
 !OnlineInterface methodsFor: 'error descriptions' stamp: 'ISW 11/6/2017 00:39:08'!
@@ -586,20 +606,33 @@ newWithClientRegister: aDictionary withPriceBook: aPriceBook withMerchantProcess
 	^ self new initializeWith: aDictionary withPriceBook: aPriceBook withMerchantProcessor: aMerchant.! !
 
 
-!classDefinition: #PurchaseList category: #TusLibros!
-Object subclass: #PurchaseList
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'TusLibros'!
-
-
 !classDefinition: #TestObjectFactory category: #TusLibros!
 Object subclass: #TestObjectFactory
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
+
+!TestObjectFactory methodsFor: 'credit cards' stamp: 'NH 11/6/2017 13:15:28'!
+expiredCreditCard
+	^ CreditCard
+		withNumber: 450000000
+		expiringOn: (GregorianMonthOfYear current previous: GregorianMonth twoMonths).! !
+
+!TestObjectFactory methodsFor: 'credit cards' stamp: 'NH 11/6/2017 13:15:45'!
+validCreditCard
+	^CreditCard 
+		withNumber: self validCreditCardNumber 
+		expiringOn: self validCreditCardExpirationDate.! !
+
+!TestObjectFactory methodsFor: 'credit cards' stamp: 'NH 11/5/2017 16:29:32'!
+validCreditCardExpirationDate
+	^( GregorianMonthOfYear current next: GregorianMonth twoMonths ).! !
+
+!TestObjectFactory methodsFor: 'credit cards' stamp: 'NH 11/5/2017 16:29:01'!
+validCreditCardNumber
+	^450000001! !
+
 
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:18:37'!
 createCart
@@ -616,29 +649,6 @@ createCashierWithMerchantProcessor: aMerchant withSalesBook: aSalesBook
 defaultMerchantBehaviour
 	^[:aMoneyAmount :aCreditCard | ]! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:34:48'!
-expiredCreditCard
-	^ CreditCard
-		withNumber: 450000000
-		expiringOn: (GregorianMonthOfYear current previous: GregorianMonth twoMonths)
-		ownedBy: self registeredClient.! !
-
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:09:10'!
-itemNotSoldByTheStore
-	^'The Community Of The Ring'! !
-
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:07:49'!
-itemSoldByTheStore
-	^ 'A Song Of Ice And Fire'.! !
-
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:08:01'!
-itemSoldByTheStorePrice
-	^100*peso! !
-
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'ISW 11/5/2017 23:59:31'!
-minutesElapsedSinceStart
-	^ 30.! !
-
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/2/2017 21:18:37'!
 priceBook
 	| catalog |
@@ -648,25 +658,28 @@ priceBook
 		put: self itemSoldByTheStorePrice.
 	^ catalog.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:36:23'!
-registeredClient
-	^'PepeSanchez'.! !
-
 !TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:42:42'!
 salesBook
 	^Dictionary new.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 17:35:14'!
-validCreditCard
-	^CreditCard 
-		withNumber: self validCreditCardNumber 
-		expiringOn: self validCreditCardExpirationDate
-		ownedBy: self registeredClient.! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:29:32'!
-validCreditCardExpirationDate
-	^( GregorianMonthOfYear current next: GregorianMonth twoMonths ).! !
+!TestObjectFactory methodsFor: 'store items' stamp: 'NH 11/2/2017 21:09:10'!
+itemNotSoldByTheStore
+	^'The Community Of The Ring'! !
 
-!TestObjectFactory methodsFor: 'as yet unclassified' stamp: 'NH 11/5/2017 16:29:01'!
-validCreditCardNumber
-	^450000001! !
+!TestObjectFactory methodsFor: 'store items' stamp: 'NH 11/2/2017 21:07:49'!
+itemSoldByTheStore
+	^ 'A Song Of Ice And Fire'.! !
+
+!TestObjectFactory methodsFor: 'store items' stamp: 'NH 11/2/2017 21:08:01'!
+itemSoldByTheStorePrice
+	^100*peso! !
+
+
+!TestObjectFactory methodsFor: 'clients' stamp: 'NH 11/6/2017 12:45:27'!
+anotherRegisteredClient
+	^'MariaGonzalez'! !
+
+!TestObjectFactory methodsFor: 'clients' stamp: 'NH 11/5/2017 17:36:23'!
+registeredClient
+	^'PepeSanchez'.! !
