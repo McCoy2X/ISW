@@ -1,15 +1,9 @@
 #TODO
 
-importTo:From: lo anote la clase pasada pero no me acuerdo a que se refiere.
----
+- cantidad de customers devolver en el metodo
+- no importar direcciones sin customers (done) addresswithoutcustomerdata
+- C pero con mas caracteres (invalidRecordType) "sacar beginsWith"
+- A pero con mas caracteres ( igual)"sacar beginsWith" Hay que poner un cliente primero.
+- menos o mas campos de los necesarios (podria ser notEqual)
 
-  self assert: customers size equals: 1.
-  customer := customers anyOne.
-
-adentro de customerIdentifiedAs:ofType: o no???	
----
-Lo que sigue es desacoplar el test de customer importer y en consequencia, 
-la sesion de la base de datos (la vamos a poder simular)
----
-Hay una variable de instancia stream en el test que no se que hace ahi
-siendo que tenemos inputStream.
+test para address y para customer (distinta cantidad de campos)
