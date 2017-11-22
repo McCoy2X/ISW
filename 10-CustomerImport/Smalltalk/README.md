@@ -1,10 +1,10 @@
 #parte 4
-No solo trabaja con customers, sino con suppliers.
-Supplier conoce clientes y direcciones.
-newCustomer (NC), existingCustomer (EC).
-(composicion de customerSystem y supplierSystem) cada uno transient y persistent.
-(tipo y numero de identificacion son un solo objeto).
+-tests de control de errores (son necesarios? van a pasar porque el suppliersystem/importer nacio de un copy class del customer como dijo wilkinson)
 
-No generalizar la solucion de entrada. (copy de client a supplier ycustomersystem a suppliersystem)
+-armar bien la jerarquia de systems y sacar codigo repetido entre ellos. No decidi donde va ERPSystem y convendria armar un "System" que seria solamente abstracto.(ERPSystem es tan poco ortodoxo que no cumpliria con la interfaz igual.)
 
-Me esta pasando los dos test que escribi (faltan todos los de control de errores) pero hay que reescribirlos un poco, porque las address las estoy agregando como direcciones del customer en vez del supplier.
+-Sacar codigo repetido entre tests (es un monton). Se podria armar un factory como en el ejercicio anterior.
+
+-Por ahi mejorar un poco el modelo. Ejemplos Identification, Customer y Supplier son muy estructuras de datos. Estaria bueno que reciban los parametros que necesitan en la creacion para ser mas "objetosos". En todos los lugares donde se crean objetos el codigo es mas o menos parecido, por ahi un extractMethod de todos los lugares donde se crean, despues cambiar el codigo del metodo extraido funciona.
+
+-Sacar cuallquier codigo repetido que quede
