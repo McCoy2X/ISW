@@ -1,5 +1,5 @@
 #parte 4
--tests de control de errores (son necesarios? van a pasar porque el suppliersystem/importer nacio de un copy class del customer como dijo wilkinson)
+-tests de control de errores 
 
 -armar bien la jerarquia de systems y sacar codigo repetido entre ellos. No decidi donde va ERPSystem y convendria armar un "System" que seria solamente abstracto.(ERPSystem es tan poco ortodoxo que no cumpliria con la interfaz igual.)
 
